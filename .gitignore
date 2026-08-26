@@ -1,0 +1,16 @@
+.codex_work/
+outputs/delivery/
+outputs/global_fire_map/*.tiff
+CTIF_Report30.pdf
+.ipynb_checkpoints/
+__pycache__/
+.venv/
+venv/
+.env
+.env.*
+*service-account*.json
+*service_account*.json
+graceful-fold-*.json
+*.pem
+*.p12
+*.zip
