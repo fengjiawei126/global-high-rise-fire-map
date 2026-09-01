@@ -1,0 +1,13 @@
+﻿display_order,analysis_family,restriction,exposure,odds_ratio,ci_low,ci_high,p_value,n_observations,n_strata,n_informative_strata,converged,status,weather_product
+1,Cohort and event exclusions,Extended cohort,heatwave_indicator,1.14390808410713,0.3891412861792384,3.3625979852544807,0.8069242701207286,1001,228,17,True,completed,NASA POWER MERRA-2/GEOS-IT
+2,Cohort and event exclusions,Core cohort,heatwave_indicator,0.941153185104224,0.286553493377981,3.091113311480184,0.9203745794496864,838,191,15,True,completed,NASA POWER MERRA-2/GEOS-IT
+3,Cohort and event exclusions,Exclude 2025–2026,heatwave_indicator,1.141297275394376,0.3032413493561763,4.29545467195731,0.8450426286133328,622,142,12,True,completed,NASA POWER MERRA-2/GEOS-IT
+4,Cohort and event exclusions,Exclude construction,heatwave_indicator,1.3595318218437693,0.4461031845573356,4.143271867561127,0.5890431548756547,899,205,15,True,completed,NASA POWER MERRA-2/GEOS-IT
+5,Cohort and event exclusions,Exclude façade,heatwave_indicator,1.8062953591708808,0.5265788768658342,6.196038367474352,0.3471215880654745,755,172,11,True,completed,NASA POWER MERRA-2/GEOS-IT
+6,Cohort and event exclusions,Exclude arson,heatwave_indicator,1.1292306494068278,0.3841945125245203,3.319052766216648,0.8251342614431377,970,221,17,True,completed,NASA POWER MERRA-2/GEOS-IT
+7,Leave-one-continent-out,Leave out Asia,heatwave_indicator,0.8428017060834804,0.1726560796571142,4.1140440417034405,0.8325523776446548,595,137,9,True,completed,NASA POWER MERRA-2/GEOS-IT
+8,Leave-one-continent-out,Leave out Europe,heatwave_indicator,1.5566923120723946,0.5023565890802446,4.823846262078608,0.4431127453051439,753,170,14,True,completed,NASA POWER MERRA-2/GEOS-IT
+9,Leave-one-continent-out,Leave out Oceania,heatwave_indicator,1.1717268365699172,0.3976591862979686,3.452563971474281,0.7737759391006682,938,214,17,True,completed,NASA POWER MERRA-2/GEOS-IT
+10,Leave-one-continent-out,Leave out North America,heatwave_indicator,1.150645527741181,0.392022218283071,3.377321663831713,0.7983934930910903,815,185,17,True,completed,NASA POWER MERRA-2/GEOS-IT
+11,Leave-one-continent-out,Leave out Africa,heatwave_indicator,0.7629068052359471,0.1984790038518994,2.932435079680341,0.6936294513824456,943,215,13,True,completed,NASA POWER MERRA-2/GEOS-IT
+12,Leave-one-continent-out,Leave out South America,heatwave_indicator,1.3724041831138631,0.4512906091857079,4.173570651574017,0.5769342651909587,961,219,15,True,completed,NASA POWER MERRA-2/GEOS-IT

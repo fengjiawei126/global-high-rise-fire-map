@@ -1,0 +1,165 @@
+\begin{thebibliography}{19}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Shi et~al.(2025)Shi, Wang, Li, Chew, Zhang, Zhang, and
+  Dlugogorski]{Shi2025}
+Long Shi, Jinhui Wang, Guohui Li, Michael Yit~Lin Chew, Heping Zhang, Guomin
+  Zhang, and Bogdan~Z. Dlugogorski.
+\newblock Increasing fire risks in cities worldwide under warming climate.
+\newblock \emph{Nature Cities}, 2:\penalty0 254--264, 2025.
+\newblock \doi{10.1038/s44284-025-00204-2}.
+
+\bibitem[Yao et~al.(2024)Yao, Jiang, Zheng, Wang, Zhu, Fang, Shi, Wang, Wang,
+  Zhong, Pei, Hudson, Xu, Bai, Huang, and Trouet]{Yao2024}
+Qichao Yao, Dabang Jiang, Ben Zheng, Xiaochun Wang, Xiaolin Zhu, Keyan Fang,
+  Lamei Shi, Zhou Wang, Yongli Wang, Linhao Zhong, Yanyan Pei, Amy Hudson,
+  Shuai Xu, Maowei Bai, Xinyan Huang, and Valerie Trouet.
+\newblock Anthropogenic warming is a key climate indicator of rising urban fire
+  activity in china.
+\newblock \emph{National Science Review}, 11\penalty0 (5):\penalty0 nwae163,
+  2024.
+\newblock \doi{10.1093/nsr/nwae163}.
+
+\bibitem[Mossberg et~al.(2021)Mossberg, Nilsson, and Andrée]{Mossberg2021}
+Axel Mossberg, Daniel Nilsson, and Kristin Andrée.
+\newblock Unannounced evacuation experiment in a high-rise hotel building with
+  evacuation elevators: A study of evacuation behaviour using eye-tracking.
+\newblock \emph{Fire Technology}, 57:\penalty0 1259--1281, 2021.
+\newblock \doi{10.1007/s10694-020-01046-1}.
+
+\bibitem[Meraner et~al.(2024)Meraner, Skilbred, and Arsava]{Meraner2024}
+Christoph Meraner, Ellen~S. Skilbred, and Kemal~S. Arsava.
+\newblock Experimental investigation of water-based fire suppression systems on
+  external façade fires.
+\newblock \emph{Fire Technology}, 60:\penalty0 3629--3648, 2024.
+\newblock \doi{10.1007/s10694-024-01595-9}.
+
+\bibitem[Jones et~al.(2022)Jones, Guha-Sapir, and Tubeuf]{Jones2022}
+Rebecca~Louise Jones, Debarati Guha-Sapir, and Sandy Tubeuf.
+\newblock Human and economic impacts of natural disasters: can we trust the
+  global data?
+\newblock \emph{Scientific Data}, 9:\penalty0 572, 2022.
+\newblock \doi{10.1038/s41597-022-01667-x}.
+
+\bibitem[Fetzer and Garg(2026)]{Fetzer2026}
+Thiemo Fetzer and Prashant Garg.
+\newblock Uneven patterns of cross-border media coverage following natural
+  disasters.
+\newblock \emph{Nature Human Behaviour}, 2026.
+\newblock \doi{10.1038/s41562-026-02512-6}.
+
+\bibitem[Levy et~al.(2001)Levy, Lumley, Sheppard, Kaufman, and
+  Checkoway]{Levy2001}
+D.~Levy, T.~Lumley, L.~Sheppard, J.~Kaufman, and H.~Checkoway.
+\newblock Referent selection in case-crossover analyses of acute health effects
+  of air pollution.
+\newblock \emph{Epidemiology}, 12\penalty0 (2):\penalty0 186--192, 2001.
+\newblock \doi{10.1097/00001648-200103000-00010}.
+
+\bibitem[Wu et~al.(2026)Wu, Lu, Jiang, Chen, Luo, Jiang, Zhang, Zhang, and
+  Huang]{Wu2026}
+Ke~Wu, Sha Lu, Yishuo Jiang, Ming Chen, Jianing Luo, Liping Jiang, Tianhang
+  Zhang, Yuxin Zhang, and Xinyan Huang.
+\newblock Risk maps for urban fire with geospatial model-based framework.
+\newblock \emph{Scientific Reports}, 16:\penalty0 7702, 2026.
+\newblock \doi{10.1038/s41598-026-38373-2}.
+
+\bibitem[Lee et~al.(2025)Lee, Hsu, Wang, and Wang]{Lee2025}
+Shao-Lun Lee, Mei-Hua Hsu, Yi-Fan Wang, and Max Yue-Feng Wang.
+\newblock Forecasting urban fire severity for enhanced emergency response and
+  resource allocation.
+\newblock \emph{Scientific Reports}, 15:\penalty0 42165, 2025.
+\newblock \doi{10.1038/s41598-025-26006-z}.
+
+\bibitem[Behrendt et~al.(2019)Behrendt, Payyappalli, and Zhuang]{Behrendt2019}
+Adam Behrendt, Vineet~M. Payyappalli, and Jun Zhuang.
+\newblock Modeling the cost effectiveness of fire protection resource
+  allocation in the united states: Models and a 1980--2014 case study.
+\newblock \emph{Risk Analysis}, 39\penalty0 (6):\penalty0 1358--1381, 2019.
+\newblock \doi{10.1111/risa.13262}.
+
+\bibitem[Muñoz-Sabater et~al.(2021)Muñoz-Sabater, Dutra, Agustí-Panareda,
+  Albergel, Arduini, Balsamo, Boussetta, Choulga, Harrigan, Hersbach, Martens,
+  Miralles, Piles, Rodríguez-Fernández, Zsoter, Buontempo, and
+  Thépaut]{MunozSabater2021}
+Joaquín Muñoz-Sabater, Emanuel Dutra, Anna Agustí-Panareda, Clément
+  Albergel, Gabriele Arduini, Gianpaolo Balsamo, Souhail Boussetta, Margarita
+  Choulga, Shaun Harrigan, Hans Hersbach, Brecht Martens, Diego~G. Miralles,
+  María Piles, Nemesio~J. Rodríguez-Fernández, Ervin Zsoter, Carlo
+  Buontempo, and Jean-Noël Thépaut.
+\newblock Era5-land: a state-of-the-art global reanalysis dataset for land
+  applications.
+\newblock \emph{Earth System Science Data}, 13\penalty0 (9):\penalty0
+  4349--4383, 2021.
+\newblock \doi{10.5194/essd-13-4349-2021}.
+
+\bibitem[{Center for International Earth Science Information
+  Network}(2018)]{GPW2020}
+{Center for International Earth Science Information Network}.
+\newblock Gridded population of the world, version 4: Population count,
+  revision 11, 2018.
+
+\bibitem[Pesaresi and Politis(2023)]{GHSL2023}
+Martino Pesaresi and Panagiotis Politis.
+\newblock {GHS-BUILT-V R2023A}: Global built-up volume grids, multitemporal
+  1975--2030, 2023.
+
+\bibitem[Gelaro et~al.(2017)Gelaro, McCarty, Suárez, Todling, Molod, Takacs,
+  Randles, Darmenov, Bosilovich, Reichle, Wargan, Coy, Cullather, Draper,
+  Akella, Buchard, Conaty, da~Silva, Gu, Kim, Koster, Lucchesi, Merkova,
+  Nielsen, Partyka, Pawson, Putman, Rienecker, Schubert, Sienkiewicz, and
+  Zhao]{Gelaro2017}
+Ronald Gelaro, Will McCarty, Max~J. Suárez, Ricardo Todling, Andrea Molod,
+  Lawrence Takacs, Cynthia~A. Randles, Anton Darmenov, Michael~G. Bosilovich,
+  Rolf Reichle, Krzysztof Wargan, Lawrence Coy, Richard Cullather, Clara
+  Draper, Santha Akella, Virginie Buchard, Austin Conaty, Arlindo~M. da~Silva,
+  Wei Gu, Gi-Kong Kim, Randal Koster, Robert Lucchesi, Dagmar Merkova, Jon~Eric
+  Nielsen, Gary Partyka, Steven Pawson, William Putman, Michele Rienecker,
+  Siegfried~D. Schubert, Meta Sienkiewicz, and Bin Zhao.
+\newblock The modern-era retrospective analysis for research and applications,
+  version 2 ({MERRA-2}).
+\newblock \emph{Journal of Climate}, 30\penalty0 (14):\penalty0 5419--5454,
+  2017.
+\newblock \doi{10.1175/JCLI-D-16-0758.1}.
+
+\bibitem[{NASA Langley Research Center POWER Project}(2026)]{NASAPOWER2026}
+{NASA Langley Research Center POWER Project}.
+\newblock {POWER} daily application programming interface and meteorological
+  data methodology, release 10, 2026.
+\newblock URL
+  \url{https://power.larc.nasa.gov/docs/services/api/temporal/daily/}.
+\newblock API v2.9.7; accessed 31 August 2026.
+
+\bibitem[{CTIF Center for Fire Statistics}(2025)]{CTIF2025}
+{CTIF Center for Fire Statistics}.
+\newblock World fire statistics report no. 30, 2025.
+\newblock URL
+  \url{https://ctif.org/sites/default/files/2025-08/CTIF_Report30.pdf}.
+\newblock Table 1.13; accessed 1 September 2026.
+
+\bibitem[{World Bank}(2026)]{WorldBank2026}
+{World Bank}.
+\newblock World development indicators, 2026.
+\newblock URL
+  \url{https://databank.worldbank.org/source/world-development-indicators}.
+\newblock Accessed 31 August 2026.
+
+\bibitem[Perkins-Kirkpatrick and Lewis(2020)]{PerkinsKirkpatrick2020}
+S.~E. Perkins-Kirkpatrick and S.~C. Lewis.
+\newblock Increasing trends in regional heatwaves.
+\newblock \emph{Nature Communications}, 11:\penalty0 3357, 2020.
+\newblock \doi{10.1038/s41467-020-16970-7}.
+
+\bibitem[Cole and Hernán(2008)]{Cole2008}
+Stephen~R. Cole and Miguel~A. Hernán.
+\newblock Constructing inverse probability weights for marginal structural
+  models.
+\newblock \emph{American Journal of Epidemiology}, 168\penalty0 (6):\penalty0
+  656--664, 2008.
+\newblock \doi{10.1093/aje/kwn164}.
+
+\end{thebibliography}

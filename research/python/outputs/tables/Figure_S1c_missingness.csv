@@ -1,0 +1,8 @@
+﻿variable,field,n_available,n_missing,percent_missing
+Country-year context,context_year,237,2,0.8368200836820083
+Deaths,deaths,234,5,2.092050209205021
+7-day heat score,heatwave_score_0_100,233,6,2.510460251046025
+Population cell,population_count_2020_1km_cell,233,6,2.510460251046025
+Injuries,injuries,164,75,31.380753138075313
+Built volume,ghsl_built_volume_m3_1km,85,154,64.43514644351464
+Evacuated,evacuated,43,196,82.00836820083683

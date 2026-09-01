@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nature Citation Browser</title>
+  <style>
+    :root {
+      --ink: #1f1f1f;
+      --muted: #5f6368;
+      --paper: #f8f9fa;
+      --panel: #ffffff;
+      --line: #dadce0;
+      --accent: #1a73e8;
+      --accent-2: #d93025;
+      --soft: #e8f0fe;
+      --soft-2: #f1f3f4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      padding: 26px clamp(16px, 4vw, 40px) 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+    .subhead {
+      max-width: 980px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+      padding: 16px clamp(16px, 4vw, 40px);
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 8;
+    }
+    .toolbar a, .toolbar button, .toolbar input, .toolbar select {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 20px;
+      padding: 10px 14px;
+      font: 500 14px Arial, Helvetica, sans-serif;
+      text-decoration: none;
+    }
+    .toolbar button, .toolbar a {
+      cursor: pointer;
+    }
+    .toolbar button.primary, .toolbar a.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .filters {
+      display: grid;
+      gap: 10px;
+    }
+    .filter-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-input {
+      width: 100%;
+    }
+    .summary-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 12px;
+      background: var(--soft-2);
+      font-size: 13px;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      padding: 22px clamp(16px, 4vw, 40px) 48px;
+    }
+    main {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+    aside {
+      position: sticky;
+      top: 124px;
+      align-self: start;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(60, 64, 67, 0.12);
+    }
+    .segment-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 4px rgba(60, 64, 67, 0.12);
+    }
+    .segment-head {
+      display: flex;
+      gap: 12px;
+      align-items: start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .segment-id {
+      background: var(--soft);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .query {
+      color: var(--muted);
+      font-size: 12px;
+      max-width: 780px;
+    }
+    .segment-text {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+    .insert-row {
+      display: grid;
+      gap: 6px;
+      margin: 12px 0 16px;
+      padding: 12px;
+      background: var(--soft);
+      border-radius: 10px;
+    }
+    .insert-row span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    code {
+      white-space: normal;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+    }
+    .references-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .reference {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: #fff;
+    }
+    .ref-topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .marker {
+      color: var(--accent);
+      font-weight: 800;
+    }
+    .grade {
+      color: var(--accent-2);
+      font-weight: 800;
+    }
+    .ref-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .check-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+      line-height: 1.35;
+      font-weight: 500;
+    }
+    .meta, .authors, .empty {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .reference a {
+      color: var(--accent);
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .abstract {
+      margin: 8px 0 0;
+      color: #3c4043;
+      font-size: 14px;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      background: rgba(20, 33, 31, 0.42);
+      backdrop-filter: blur(3px);
+      z-index: 20;
+    }
+    .modal-overlay.is-hidden {
+      display: none;
+    }
+    .modal-panel {
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      width: min(680px, calc(100vw - 28px));
+      box-shadow: 0 16px 40px rgba(60, 64, 67, 0.28);
+      background: var(--panel);
+      color: var(--ink);
+    }
+    .modal-inner {
+      padding: 24px;
+    }
+    .modal-inner h2 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      background: var(--soft-2);
+    }
+    .stat b {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+    }
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .modal-actions a, .modal-actions button {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fffdf8;
+      border-radius: 20px;
+      padding: 10px 12px;
+      font: 700 14px Arial, Helvetica, sans-serif;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .modal-actions button {
+      background: var(--panel);
+      color: var(--accent);
+    }
+    .selection-title {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .selection-meta {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .selection-list {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+      max-height: 48vh;
+      overflow: auto;
+    }
+    .selection-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--soft-2);
+    }
+    .selection-item h4 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .selection-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .empty-state {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      background: var(--soft-2);
+    }
+    @media (max-width: 680px) {
+      .stats { grid-template-columns: 1fr; }
+      .segment-head { align-items: flex-start; }
+    }
+    @media (max-width: 1040px) {
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+      .summary-strip {
+        justify-content: flex-start;
+      }
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      aside {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Nature Citation Browser</h1>
+    <p class="subhead">Scholar-style browsing for strict Nature/CNS-family candidates. Filter by year, compare related hits, choose the references you actually want, then download them as ENW, RIS, or Zotero RDF.</p>
+  </header>
+  <nav class="toolbar">
+    <div class="filters">
+      <input id="queryFilter" class="search-input" type="text" placeholder="Filter by title, journal, DOI, author, or segment text">
+      <div class="filter-group">
+        <label for="yearFrom">From year</label>
+        <input id="yearFrom" type="number" min="1900" max="2100" placeholder="2019">
+        <label for="yearTo">To year</label>
+        <input id="yearTo" type="number" min="1900" max="2100" placeholder="2026">
+        <button id="applyFilters" type="button">Apply filters</button>
+        <button id="clearFilters" type="button">Clear</button>
+      </div>
+      <div class="filter-group">
+        <label class="check-row"><input id="selectedOnly" type="checkbox"> Show selected only</label>
+      </div>
+    </div>
+    <div class="summary-strip">
+      <span class="pill"><strong id="visibleCount">0</strong> visible</span>
+      <span class="pill"><strong id="selectedCount">0</strong> selected</span>
+      <span class="pill"><strong>5</strong> segments</span>
+    </div>
+    <div class="summary-strip">
+      <button id="openSummary" type="button">Guide</button>
+      <label for="downloadFormat">Format</label>
+      <select id="downloadFormat">
+        <option value="enw">ENW</option>
+        <option value="ris">RIS</option>
+        <option value="zotero-rdf">Zotero RDF</option>
+      </select>
+      <a class="primary" id="downloadSelected" href="references.enw" download="references.enw">Download selected / all</a>
+    </div>
+  </nav>
+  <div class="layout">
+    <main id="results">
+      
+            <section class="segment-card" id="S001">
+              <div class="segment-head">
+                <span class="segment-id">S001 · Sentence 1</span>
+                <span class="query">Query: Climate warming alters urban fire activity worldwide including building fires</span>
+              </div>
+              <p class="segment-text">Climate warming alters urban fire activity worldwide, including building fires.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Turco et al., 2018) (Unknown author et al., 2024)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41467-018-06358-z"
+                      data-title="Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models"
+                      data-journal="Nature Communications"
+                      data-doi="10.1038/s41467-018-06358-z"
+                      data-year="2018"
+                      data-authors="Turco, Marco; Rosa-Cánovas, Juan José; Bedia, Joaquín; Jerez, Sonia; Montávez, Juan Pedro; Llasat, Maria Carmen; Provenzale, Antonello"
+                      data-segment="Climate warming alters urban fire activity worldwide, including building fires."
+                      data-record="{&quot;title&quot;: &quot;Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models&quot;, &quot;journal&quot;: &quot;Nature Communications&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2018&quot;, &quot;doi&quot;: &quot;10.1038/s41467-018-06358-z&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41467-018-06358-z&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41467-018-06358-z&quot;, &quot;volume&quot;: &quot;9&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;3821&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2041-1723&quot;, &quot;authors&quot;: [&quot;Turco, Marco&quot;, &quot;Rosa-Cánovas, Juan José&quot;, &quot;Bedia, Joaquín&quot;, &quot;Jerez, Sonia&quot;, &quot;Montávez, Juan Pedro&quot;, &quot;Llasat, Maria Carmen&quot;, &quot;Provenzale, Antonello&quot;], &quot;abstract&quot;: &quot;Abstract The observed trend towards warmer and drier conditions in southern Europe is projected to continue in the next decades, possibly leading to increased risk of large fires. However, an assessment of climate change impacts on fires at and above the 1.5 °C Paris target is still missing. Here, we estimate future summer burned area in Mediterranean Europe under 1.5, 2, and 3 °C global warming scenarios, accounting for possible modifications of climate-fire relationships under changed climatic conditions owing to productivity alterations. We found that such modifications could be beneficial, roughly halving the fire-intensifying signals. In any case, the burned area is robustly projected to increase. The higher the warming level is, the larger is the increase of burned area, ranging from ~40% to ~100% across the scenarios. Our results indicate that significant benefits would be obtained if warming were limited to well below 2 °C.&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 26.63439, &quot;source_query&quot;: &quot;Climate warming alters urban fire activity worldwide including building fires&quot;, &quot;citation_marker&quot;: &quot;(Turco et al., 2018)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\n%A Turco, Marco\n%A Rosa-Cánovas, Juan José\n%A Bedia, Joaquín\n%A Jerez, Sonia\n%A Montávez, Juan Pedro\n%A Llasat, Maria Carmen\n%A Provenzale, Antonello\n%J Nature Communications\n%V 9\n%N 1\n%P 3821\n%D 2018\n%@ 2041-1723\n%R 10.1038/s41467-018-06358-z\n%U https://doi.org/10.1038/s41467-018-06358-z&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\nAU  - Turco, Marco\nAU  - Rosa-Cánovas, Juan José\nAU  - Bedia, Joaquín\nAU  - Jerez, Sonia\nAU  - Montávez, Juan Pedro\nAU  - Llasat, Maria Carmen\nAU  - Provenzale, Antonello\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2018\nY1  - 2018/10/02\nVL  - 9\nIS  - 1\nSP  - 3821\nDO  - 10.1038/s41467-018-06358-z\nUR  - https://doi.org/10.1038/s41467-018-06358-z\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2041-1723:vol:9:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41467-018-06358-z\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2041-1723:vol:9:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Turco&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Marco&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Rosa-Cánovas&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Juan José&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Bedia&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Joaquín&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Jerez&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Sonia&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Montávez&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Juan Pedro&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Llasat&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Maria Carmen&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Provenzale&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Antonello&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models&lt;/dc:title&gt;\n        &lt;dc:date&gt;2018-10-02&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41467-018-06358-z&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41467-018-06358-z&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;3821&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;turcoExacerbatedFiresIn2018&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2041-1723:vol:9:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;9&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Nature Communications&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2041-1723&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Turco et al., 2018)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 3</span>
+                      </div>
+                      <h3>Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models</h3>
+                      <p class="meta">Nature Communications · Nature Portfolio · 2018</p>
+                      <p class="authors">Turco, Marco; Rosa-Cánovas, Juan José; Bedia, Joaquín; Jerez, Sonia; Montávez, Juan Pedro; Llasat, Maria Carmen</p>
+                      <p class="abstract">Abstract The observed trend towards warmer and drier conditions in southern Europe is projected to continue in the next decades, possibly leading to increased risk of large fires. However, an assessment of climate change impacts on fires at and above the 1.5 °C Paris target is still missing. Here, we estimate future summer burned area in Mediterranean Europe under 1.5, 2, and 3...</p>
+                      <a href="https://doi.org/10.1038/s41467-018-06358-z" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41467-018-06358-z</a>
+                    </article>
+                    
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41558-024-02141-9"
+                      data-title="Climate change is increasingly affecting fires worldwide"
+                      data-journal="Nature Climate Change"
+                      data-doi="10.1038/s41558-024-02141-9"
+                      data-year="2024"
+                      data-authors=""
+                      data-segment="Climate warming alters urban fire activity worldwide, including building fires."
+                      data-record="{&quot;title&quot;: &quot;Climate change is increasingly affecting fires worldwide&quot;, &quot;journal&quot;: &quot;Nature Climate Change&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2024&quot;, &quot;doi&quot;: &quot;10.1038/s41558-024-02141-9&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41558-024-02141-9&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41558-024-02141-9&quot;, &quot;volume&quot;: &quot;14&quot;, &quot;issue&quot;: &quot;11&quot;, &quot;start_page&quot;: &quot;1123&quot;, &quot;end_page&quot;: &quot;1124&quot;, &quot;issn&quot;: &quot;1758-678X&quot;, &quot;authors&quot;: [], &quot;abstract&quot;: &quot;&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 26.221348, &quot;source_query&quot;: &quot;Climate warming alters urban fire activity worldwide including building fires&quot;, &quot;citation_marker&quot;: &quot;(Unknown author et al., 2024)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Climate change is increasingly affecting fires worldwide\n%J Nature Climate Change\n%V 14\n%N 11\n%P 1123-1124\n%D 2024\n%@ 1758-678X\n%R 10.1038/s41558-024-02141-9\n%U https://doi.org/10.1038/s41558-024-02141-9&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Climate change is increasingly affecting fires worldwide\nT2  - Nature Climate Change\nJO  - Nature Climate Change\nPY  - 2024\nY1  - 2024/11/01\nVL  - 14\nIS  - 11\nSP  - 1123\nEP  - 1124\nDO  - 10.1038/s41558-024-02141-9\nUR  - https://doi.org/10.1038/s41558-024-02141-9\nSN  - 1758-678X\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:1758-678x:vol:14:issue:11&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41558-024-02141-9\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:1758-678x:vol:14:issue:11\&quot;/&gt;\n        &lt;dc:title&gt;Climate change is increasingly affecting fires worldwide&lt;/dc:title&gt;\n        &lt;dc:date&gt;2024-11-01&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41558-024-02141-9&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41558-024-02141-9&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;1123-1124&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;unknown-authorClimateChangeIs2024&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:1758-678x:vol:14:issue:11\&quot;&gt;\n        &lt;prism:volume&gt;14&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Nature Climate Change&lt;/dc:title&gt;\n        &lt;prism:number&gt;11&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 1758-678X&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Unknown author et al., 2024)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>2 / 3</span>
+                      </div>
+                      <h3>Climate change is increasingly affecting fires worldwide</h3>
+                      <p class="meta">Nature Climate Change · Nature Portfolio · 2024</p>
+                      <p class="authors"></p>
+                      <p class="abstract">No abstract snippet available from Crossref metadata.</p>
+                      <a href="https://doi.org/10.1038/s41558-024-02141-9" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41558-024-02141-9</a>
+                    </article>
+                    
+                    <article
+                      class="reference"
+                      data-key="10.1038/s44284-025-00204-2"
+                      data-title="Increasing fire risks in cities worldwide under warming climate"
+                      data-journal="Nature Cities"
+                      data-doi="10.1038/s44284-025-00204-2"
+                      data-year="2025"
+                      data-authors="Shi, Long; Wang, Jinhui; Li, Guohui; Chew, Michael Yit Lin; Zhang, Heping; Zhang, Guomin; Dlugogorski, Bogdan Z."
+                      data-segment="Climate warming alters urban fire activity worldwide, including building fires."
+                      data-record="{&quot;title&quot;: &quot;Increasing fire risks in cities worldwide under warming climate&quot;, &quot;journal&quot;: &quot;Nature Cities&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2025&quot;, &quot;doi&quot;: &quot;10.1038/s44284-025-00204-2&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s44284-025-00204-2&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s44284-025-00204-2&quot;, &quot;volume&quot;: &quot;2&quot;, &quot;issue&quot;: &quot;3&quot;, &quot;start_page&quot;: &quot;254&quot;, &quot;end_page&quot;: &quot;264&quot;, &quot;issn&quot;: &quot;2731-9997&quot;, &quot;authors&quot;: [&quot;Shi, Long&quot;, &quot;Wang, Jinhui&quot;, &quot;Li, Guohui&quot;, &quot;Chew, Michael Yit Lin&quot;, &quot;Zhang, Heping&quot;, &quot;Zhang, Guomin&quot;, &quot;Dlugogorski, Bogdan Z.&quot;], &quot;abstract&quot;: &quot;&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 25.89434, &quot;source_query&quot;: &quot;Climate warming alters urban fire activity worldwide including building fires&quot;, &quot;citation_marker&quot;: &quot;(Shi et al., 2025)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Increasing fire risks in cities worldwide under warming climate\n%A Shi, Long\n%A Wang, Jinhui\n%A Li, Guohui\n%A Chew, Michael Yit Lin\n%A Zhang, Heping\n%A Zhang, Guomin\n%A Dlugogorski, Bogdan Z.\n%J Nature Cities\n%V 2\n%N 3\n%P 254-264\n%D 2025\n%@ 2731-9997\n%R 10.1038/s44284-025-00204-2\n%U https://doi.org/10.1038/s44284-025-00204-2&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Increasing fire risks in cities worldwide under warming climate\nAU  - Shi, Long\nAU  - Wang, Jinhui\nAU  - Li, Guohui\nAU  - Chew, Michael Yit Lin\nAU  - Zhang, Heping\nAU  - Zhang, Guomin\nAU  - Dlugogorski, Bogdan Z.\nT2  - Nature Cities\nJO  - Nature Cities\nPY  - 2025\nY1  - 2025/03/03\nVL  - 2\nIS  - 3\nSP  - 254\nEP  - 264\nDO  - 10.1038/s44284-025-00204-2\nUR  - https://doi.org/10.1038/s44284-025-00204-2\nSN  - 2731-9997\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2731-9997:vol:2:issue:3&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s44284-025-00204-2\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2731-9997:vol:2:issue:3\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Shi&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Long&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Wang&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Jinhui&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Li&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Guohui&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Chew&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Michael Yit Lin&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Zhang&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Heping&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Zhang&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Guomin&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Dlugogorski&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Bogdan Z.&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Increasing fire risks in cities worldwide under warming climate&lt;/dc:title&gt;\n        &lt;dc:date&gt;2025-03-03&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s44284-025-00204-2&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s44284-025-00204-2&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;254-264&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;shiIncreasingFireRisks2025&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2731-9997:vol:2:issue:3\&quot;&gt;\n        &lt;prism:volume&gt;2&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Nature Cities&lt;/dc:title&gt;\n        &lt;prism:number&gt;3&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2731-9997&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Shi et al., 2025)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>3 / 3</span>
+                      </div>
+                      <h3>Increasing fire risks in cities worldwide under warming climate</h3>
+                      <p class="meta">Nature Cities · Nature Portfolio · 2025</p>
+                      <p class="authors">Shi, Long; Wang, Jinhui; Li, Guohui; Chew, Michael Yit Lin; Zhang, Heping; Zhang, Guomin</p>
+                      <p class="abstract">No abstract snippet available from Crossref metadata.</p>
+                      <a href="https://doi.org/10.1038/s44284-025-00204-2" target="_blank" rel="noreferrer">https://doi.org/10.1038/s44284-025-00204-2</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S002">
+              <div class="segment-head">
+                <span class="segment-id">S002 · Sentence 2</span>
+                <span class="query">Query: Short-lived extreme heat may influence building-fire occurrence but a global event-day analysis using same-location matched control days remains an unresolved design gap</span>
+              </div>
+              <p class="segment-text">Short-lived extreme heat may influence building-fire occurrence, but a global event-day analysis using same-location matched control days remains an unresolved design gap.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Guo et al., 2026)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41598-026-37372-7"
+                      data-title="Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves"
+                      data-journal="Scientific Reports"
+                      data-doi="10.1038/s41598-026-37372-7"
+                      data-year="2026"
+                      data-authors="Guo, Johnny; Lee, Xuhui; Zhang, Keer"
+                      data-segment="Short-lived extreme heat may influence building-fire occurrence, but a global event-day analysis using same-location matched control days remains an unresolved design gap."
+                      data-record="{&quot;title&quot;: &quot;Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves&quot;, &quot;journal&quot;: &quot;Scientific Reports&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2026&quot;, &quot;doi&quot;: &quot;10.1038/s41598-026-37372-7&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41598-026-37372-7&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41598-026-37372-7&quot;, &quot;volume&quot;: &quot;16&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;9012&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2045-2322&quot;, &quot;authors&quot;: [&quot;Guo, Johnny&quot;, &quot;Lee, Xuhui&quot;, &quot;Zhang, Keer&quot;], &quot;abstract&quot;: &quot;&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 24.208181, &quot;source_query&quot;: &quot;Short-lived extreme heat influence building-fire occurrence but global event-day analysis using same-location&quot;, &quot;citation_marker&quot;: &quot;(Guo et al., 2026)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves\n%A Guo, Johnny\n%A Lee, Xuhui\n%A Zhang, Keer\n%J Scientific Reports\n%V 16\n%N 1\n%P 9012\n%D 2026\n%@ 2045-2322\n%R 10.1038/s41598-026-37372-7\n%U https://doi.org/10.1038/s41598-026-37372-7&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves\nAU  - Guo, Johnny\nAU  - Lee, Xuhui\nAU  - Zhang, Keer\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2026\nY1  - 2026/02/14\nVL  - 16\nIS  - 1\nSP  - 9012\nDO  - 10.1038/s41598-026-37372-7\nUR  - https://doi.org/10.1038/s41598-026-37372-7\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2045-2322:vol:16:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41598-026-37372-7\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2045-2322:vol:16:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Guo&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Johnny&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Lee&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Xuhui&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Zhang&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Keer&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves&lt;/dc:title&gt;\n        &lt;dc:date&gt;2026-02-14&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41598-026-37372-7&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41598-026-37372-7&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;9012&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;guoGlobalSpatiotemporalAnalysis2026&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2045-2322:vol:16:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;16&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Scientific Reports&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2045-2322&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Guo et al., 2026)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 1</span>
+                      </div>
+                      <h3>Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves</h3>
+                      <p class="meta">Scientific Reports · Nature Portfolio · 2026</p>
+                      <p class="authors">Guo, Johnny; Lee, Xuhui; Zhang, Keer</p>
+                      <p class="abstract">No abstract snippet available from Crossref metadata.</p>
+                      <a href="https://doi.org/10.1038/s41598-026-37372-7" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41598-026-37372-7</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S003">
+              <div class="segment-head">
+                <span class="segment-id">S003 · Sentence 3</span>
+                <span class="query">Query: Global event databases can have geographically structured ascertainment and missingness so raw documented-record counts need not represent population incidence</span>
+              </div>
+              <p class="segment-text">Global event databases can have geographically structured ascertainment and missingness, so raw documented-record counts need not represent population incidence.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Han et al., 2025) (Unknown author et al., 2025)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41598-025-99997-4"
+                      data-title="SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring"
+                      data-journal="Scientific Reports"
+                      data-doi="10.1038/s41598-025-99997-4"
+                      data-year="2025"
+                      data-authors="Han, Seongil; Jung, Haemin; Yoo, Paul D."
+                      data-segment="Global event databases can have geographically structured ascertainment and missingness, so raw documented-record counts need not represent population incidence."
+                      data-record="{&quot;title&quot;: &quot;SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring&quot;, &quot;journal&quot;: &quot;Scientific Reports&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2025&quot;, &quot;doi&quot;: &quot;10.1038/s41598-025-99997-4&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41598-025-99997-4&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41598-025-99997-4&quot;, &quot;volume&quot;: &quot;15&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;15111&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2045-2322&quot;, &quot;authors&quot;: [&quot;Han, Seongil&quot;, &quot;Jung, Haemin&quot;, &quot;Yoo, Paul D.&quot;], &quot;abstract&quot;: &quot;Abstract The Basel Accord emphasizes the necessity of employing internal data models to manage key credit risk components, including Probability of Default (PD), Loss Given Default (LGD), and Exposure At Default (EAD). Among these, internal datasets are critical for estimating PD, a fundamental measure of borrower creditworthiness. Nevertheless, practical application often faces challenges due to incomplete datasets, which can skew analyses and undermine the accuracy of credit scoring models. Traditional approaches to addressing missing data, such as sample deletion or mean imputation, are widely used; however, they often prove insufficient for accurate prediction. Consequently, imputation methods are typically favored over deletion, as they allow for the full utilization of available data. Recent advancements have introduced more sophisticated techniques, such as Generative Adversarial Imputation Networks (GAIN), which utilize a generative adversarial network to model data distributions and impute missing values with greater precision than conventional methods. Building on these developments, this study proposes a novel imputation approach, SMART (Structured Missingness Analysis and Reconstruction Technique) for credit scoring datasets. SMART consists of two primary stages: first, it normalizes and denoises the dataset using randomized Singular Value Decomposition (rSVD), followed by the implementation of GAIN to impute missing values. Experimental results demonstrate that SMART significantly outperforms existing state-of-the-art methods, particularly in high missing data contexts (20%, 50%, and 80%), with improvements in imputation accuracy of 7.04%, 6.34%, and 13.38%, respectively. In conclusion, SMART represents a substantial advancement in handling incomplete credit scoring datasets, leading to more precise PD estimation and enhancing the robustness of credit risk management models.&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 21.825766, &quot;source_query&quot;: &quot;Global event databases have geographically structured ascertainment missingness so raw documented-record counts&quot;, &quot;citation_marker&quot;: &quot;(Han et al., 2025)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring\n%A Han, Seongil\n%A Jung, Haemin\n%A Yoo, Paul D.\n%J Scientific Reports\n%V 15\n%N 1\n%P 15111\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-99997-4\n%U https://doi.org/10.1038/s41598-025-99997-4&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring\nAU  - Han, Seongil\nAU  - Jung, Haemin\nAU  - Yoo, Paul D.\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/04/29\nVL  - 15\nIS  - 1\nSP  - 15111\nDO  - 10.1038/s41598-025-99997-4\nUR  - https://doi.org/10.1038/s41598-025-99997-4\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2045-2322:vol:15:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41598-025-99997-4\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2045-2322:vol:15:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Han&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Seongil&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Jung&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Haemin&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Yoo&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Paul D.&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring&lt;/dc:title&gt;\n        &lt;dc:date&gt;2025-04-29&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41598-025-99997-4&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41598-025-99997-4&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;15111&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;hanSmartStructuredMissingness2025&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2045-2322:vol:15:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;15&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Scientific Reports&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2045-2322&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Han et al., 2025)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 2</span>
+                      </div>
+                      <h3>SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring</h3>
+                      <p class="meta">Scientific Reports · Nature Portfolio · 2025</p>
+                      <p class="authors">Han, Seongil; Jung, Haemin; Yoo, Paul D.</p>
+                      <p class="abstract">Abstract The Basel Accord emphasizes the necessity of employing internal data models to manage key credit risk components, including Probability of Default (PD), Loss Given Default (LGD), and Exposure At Default (EAD). Among these, internal datasets are critical for estimating PD, a fundamental measure of borrower creditworthiness. Nevertheless, practical application often face...</p>
+                      <a href="https://doi.org/10.1038/s41598-025-99997-4" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41598-025-99997-4</a>
+                    </article>
+                    
+                    <article
+                      class="reference"
+                      data-key="10.1038/s43588-025-00892-9"
+                      data-title="Boosting power for time-to-event GWAS analysis affected by case ascertainment"
+                      data-journal="Nature Computational Science"
+                      data-doi="10.1038/s43588-025-00892-9"
+                      data-year="2025"
+                      data-authors=""
+                      data-segment="Global event databases can have geographically structured ascertainment and missingness, so raw documented-record counts need not represent population incidence."
+                      data-record="{&quot;title&quot;: &quot;Boosting power for time-to-event GWAS analysis affected by case ascertainment&quot;, &quot;journal&quot;: &quot;Nature Computational Science&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2025&quot;, &quot;doi&quot;: &quot;10.1038/s43588-025-00892-9&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s43588-025-00892-9&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s43588-025-00892-9&quot;, &quot;volume&quot;: &quot;5&quot;, &quot;issue&quot;: &quot;11&quot;, &quot;start_page&quot;: &quot;996&quot;, &quot;end_page&quot;: &quot;997&quot;, &quot;issn&quot;: &quot;2662-8457&quot;, &quot;authors&quot;: [], &quot;abstract&quot;: &quot;&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 20.232649, &quot;source_query&quot;: &quot;Global event databases have geographically structured ascertainment missingness so raw documented-record counts&quot;, &quot;citation_marker&quot;: &quot;(Unknown author et al., 2025)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Boosting power for time-to-event GWAS analysis affected by case ascertainment\n%J Nature Computational Science\n%V 5\n%N 11\n%P 996-997\n%D 2025\n%@ 2662-8457\n%R 10.1038/s43588-025-00892-9\n%U https://doi.org/10.1038/s43588-025-00892-9&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Boosting power for time-to-event GWAS analysis affected by case ascertainment\nT2  - Nature Computational Science\nJO  - Nature Computational Science\nPY  - 2025\nY1  - 2025/10/02\nVL  - 5\nIS  - 11\nSP  - 996\nEP  - 997\nDO  - 10.1038/s43588-025-00892-9\nUR  - https://doi.org/10.1038/s43588-025-00892-9\nSN  - 2662-8457\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2662-8457:vol:5:issue:11&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s43588-025-00892-9\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2662-8457:vol:5:issue:11\&quot;/&gt;\n        &lt;dc:title&gt;Boosting power for time-to-event GWAS analysis affected by case ascertainment&lt;/dc:title&gt;\n        &lt;dc:date&gt;2025-10-02&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s43588-025-00892-9&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s43588-025-00892-9&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;996-997&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;unknown-authorBoostingPowerFor2025&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2662-8457:vol:5:issue:11\&quot;&gt;\n        &lt;prism:volume&gt;5&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Nature Computational Science&lt;/dc:title&gt;\n        &lt;prism:number&gt;11&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2662-8457&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Unknown author et al., 2025)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>2 / 2</span>
+                      </div>
+                      <h3>Boosting power for time-to-event GWAS analysis affected by case ascertainment</h3>
+                      <p class="meta">Nature Computational Science · Nature Portfolio · 2025</p>
+                      <p class="authors"></p>
+                      <p class="abstract">No abstract snippet available from Crossref metadata.</p>
+                      <a href="https://doi.org/10.1038/s43588-025-00892-9" target="_blank" rel="noreferrer">https://doi.org/10.1038/s43588-025-00892-9</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S004">
+              <div class="segment-head">
+                <span class="segment-id">S004 · Sentence 4</span>
+                <span class="query">Query: Population and built form shape urban fire exposure but static spatial layers cannot identify an acute within-location weather association</span>
+              </div>
+              <p class="segment-text">Population and built form shape urban fire exposure, but static spatial layers cannot identify an acute within-location weather association.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Marwal et al., 2023)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s42949-023-00112-1"
+                      data-title="Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation"
+                      data-journal="npj Urban Sustainability"
+                      data-doi="10.1038/s42949-023-00112-1"
+                      data-year="2023"
+                      data-authors="Marwal, Aviral; Silva, Elisabete A."
+                      data-segment="Population and built form shape urban fire exposure, but static spatial layers cannot identify an acute within-location weather association."
+                      data-record="{&quot;title&quot;: &quot;Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation&quot;, &quot;journal&quot;: &quot;npj Urban Sustainability&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2023&quot;, &quot;doi&quot;: &quot;10.1038/s42949-023-00112-1&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s42949-023-00112-1&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s42949-023-00112-1&quot;, &quot;volume&quot;: &quot;3&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;40&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2661-8001&quot;, &quot;authors&quot;: [&quot;Marwal, Aviral&quot;, &quot;Silva, Elisabete A.&quot;], &quot;abstract&quot;: &quot;Abstract Previous studies have established a significant link between urban form and sustainability. However, the diversity of micro-scale urban forms in cities in the global south has received limited attention, hindered by the lack of neighbourhood-level spatial data and maps, which poses challenges in exploring micro-urban form features. The study addresses this gap using a grid-based k-means clustering algorithm to identify residential built-up form typologies in Delhi and assess their impact on sustainable urbanisation. The algorithm clusters 100×100 metre grid cells based on their attributes of accessibility, built-up density, and street design. The results show six distinct built-up form typologies in Delhi. However, only 19% of residential areas meet the criteria for sustainable urbanisation, highlighting the need for planning interventions in most areas. The study methodology can be applied to analyse micro-scale urban form features in other cities in the global south, providing a fresh perspective on urbanisation research.&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 21.709213, &quot;source_query&quot;: &quot;Population built form shape urban fire exposure but&quot;, &quot;citation_marker&quot;: &quot;(Marwal et al., 2023)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation\n%A Marwal, Aviral\n%A Silva, Elisabete A.\n%J npj Urban Sustainability\n%V 3\n%N 1\n%P 40\n%D 2023\n%@ 2661-8001\n%R 10.1038/s42949-023-00112-1\n%U https://doi.org/10.1038/s42949-023-00112-1&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation\nAU  - Marwal, Aviral\nAU  - Silva, Elisabete A.\nT2  - npj Urban Sustainability\nJO  - npj Urban Sustainability\nPY  - 2023\nY1  - 2023/06/26\nVL  - 3\nIS  - 1\nSP  - 40\nDO  - 10.1038/s42949-023-00112-1\nUR  - https://doi.org/10.1038/s42949-023-00112-1\nSN  - 2661-8001\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2661-8001:vol:3:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s42949-023-00112-1\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2661-8001:vol:3:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Marwal&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Aviral&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Silva&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Elisabete A.&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation&lt;/dc:title&gt;\n        &lt;dc:date&gt;2023-06-26&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s42949-023-00112-1&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s42949-023-00112-1&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;40&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;marwalExploringResidentialBuilt2023&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2661-8001:vol:3:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;3&lt;/prism:volume&gt;\n        &lt;dc:title&gt;npj Urban Sustainability&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2661-8001&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Marwal et al., 2023)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 1</span>
+                      </div>
+                      <h3>Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation</h3>
+                      <p class="meta">npj Urban Sustainability · Nature Portfolio · 2023</p>
+                      <p class="authors">Marwal, Aviral; Silva, Elisabete A.</p>
+                      <p class="abstract">Abstract Previous studies have established a significant link between urban form and sustainability. However, the diversity of micro-scale urban forms in cities in the global south has received limited attention, hindered by the lack of neighbourhood-level spatial data and maps, which poses challenges in exploring micro-urban form features. The study addresses this gap using a ...</p>
+                      <a href="https://doi.org/10.1038/s42949-023-00112-1" target="_blank" rel="noreferrer">https://doi.org/10.1038/s42949-023-00112-1</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S005">
+              <div class="segment-head">
+                <span class="segment-id">S005 · Sentence 5</span>
+                <span class="query">Query: Fire-service capacity and resource allocation are relevant to urban fire consequences while cross-national resource statistics can differ in reference year and reporting system</span>
+              </div>
+              <p class="segment-text">Fire-service capacity and resource allocation are relevant to urban fire consequences, while cross-national resource statistics can differ in reference year and reporting system.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Lee et al., 2025)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41598-025-26006-z"
+                      data-title="Forecasting urban fire severity for enhanced emergency response and resource allocation"
+                      data-journal="Scientific Reports"
+                      data-doi="10.1038/s41598-025-26006-z"
+                      data-year="2025"
+                      data-authors="Lee, Shao-Lun; Hsu, Mei-Hua; Wang, Yi-Fan; Wang, Max Yue-Feng"
+                      data-segment="Fire-service capacity and resource allocation are relevant to urban fire consequences, while cross-national resource statistics can differ in reference year and reporting system."
+                      data-record="{&quot;title&quot;: &quot;Forecasting urban fire severity for enhanced emergency response and resource allocation&quot;, &quot;journal&quot;: &quot;Scientific Reports&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2025&quot;, &quot;doi&quot;: &quot;10.1038/s41598-025-26006-z&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41598-025-26006-z&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41598-025-26006-z&quot;, &quot;volume&quot;: &quot;15&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;42165&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2045-2322&quot;, &quot;authors&quot;: [&quot;Lee, Shao-Lun&quot;, &quot;Hsu, Mei-Hua&quot;, &quot;Wang, Yi-Fan&quot;, &quot;Wang, Max Yue-Feng&quot;], &quot;abstract&quot;: &quot;&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 38.45803, &quot;source_query&quot;: &quot;Fire-service capacity and resource allocation are relevant to urban fire consequences while cross-national resource statistics can differ in reference year and reporting system&quot;, &quot;citation_marker&quot;: &quot;(Lee et al., 2025)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Forecasting urban fire severity for enhanced emergency response and resource allocation\n%A Lee, Shao-Lun\n%A Hsu, Mei-Hua\n%A Wang, Yi-Fan\n%A Wang, Max Yue-Feng\n%J Scientific Reports\n%V 15\n%N 1\n%P 42165\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-26006-z\n%U https://doi.org/10.1038/s41598-025-26006-z&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Forecasting urban fire severity for enhanced emergency response and resource allocation\nAU  - Lee, Shao-Lun\nAU  - Hsu, Mei-Hua\nAU  - Wang, Yi-Fan\nAU  - Wang, Max Yue-Feng\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/11/26\nVL  - 15\nIS  - 1\nSP  - 42165\nDO  - 10.1038/s41598-025-26006-z\nUR  - https://doi.org/10.1038/s41598-025-26006-z\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2045-2322:vol:15:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41598-025-26006-z\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2045-2322:vol:15:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Lee&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Shao-Lun&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Hsu&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Mei-Hua&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Wang&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Yi-Fan&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Wang&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Max Yue-Feng&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Forecasting urban fire severity for enhanced emergency response and resource allocation&lt;/dc:title&gt;\n        &lt;dc:date&gt;2025-11-26&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41598-025-26006-z&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41598-025-26006-z&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;42165&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;leeForecastingUrbanFire2025&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2045-2322:vol:15:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;15&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Scientific Reports&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2045-2322&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Lee et al., 2025)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 1</span>
+                      </div>
+                      <h3>Forecasting urban fire severity for enhanced emergency response and resource allocation</h3>
+                      <p class="meta">Scientific Reports · Nature Portfolio · 2025</p>
+                      <p class="authors">Lee, Shao-Lun; Hsu, Mei-Hua; Wang, Yi-Fan; Wang, Max Yue-Feng</p>
+                      <p class="abstract">No abstract snippet available from Crossref metadata.</p>
+                      <a href="https://doi.org/10.1038/s41598-025-26006-z" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41598-025-26006-z</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+    </main>
+    <aside>
+      <h2 class="selection-title">Selected references</h2>
+      <p class="selection-meta">Tick the references you want. The download button exports the selection in the chosen format. If nothing is selected, it exports all references.</p>
+      <div id="selectionList" class="selection-list"></div>
+      <div id="selectionEmpty" class="empty-state">No references selected yet.</div>
+    </aside>
+  </div>
+  <div class="modal-overlay" id="summaryModal" aria-hidden="false">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
+      <div class="modal-inner">
+        <h2 id="summaryTitle">Ready to review citations</h2>
+        <p>This page behaves more like a compact Scholar browser: filter by year, browse related results, select the citations you trust, and download them as ENW, RIS, or Zotero RDF.</p>
+        <div class="stats">
+          <div class="stat"><b>5</b><span>segments</span></div>
+          <div class="stat"><b>8</b><span>unique references</span></div>
+        </div>
+        <p class="meta">Important: these are still metadata-level candidates. Selection is your decision, not an automatic validity guarantee.</p>
+        <div class="modal-actions">
+          <a href="references.enw" download>Download original ENW file</a>
+          <button id="closeSummary" type="button" onclick="document.getElementById('summaryModal').classList.add('is-hidden'); document.getElementById('summaryModal').setAttribute('aria-hidden', 'true');">Start browsing</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script id="citationData" type="application/json">{"segmentCount": 5, "referenceCount": 8, "defaultExportFormat": "enw", "defaultExportName": "references.enw", "references": [{"title": "Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models", "journal": "Nature Communications", "family": "Nature Portfolio", "year": "2018", "doi": "10.1038/s41467-018-06358-z", "url": "https://doi.org/10.1038/s41467-018-06358-z", "doi_url": "https://doi.org/10.1038/s41467-018-06358-z", "volume": "9", "issue": "1", "start_page": "3821", "end_page": "", "issn": "2041-1723", "authors": ["Turco, Marco", "Rosa-Cánovas, Juan José", "Bedia, Joaquín", "Jerez, Sonia", "Montávez, Juan Pedro", "Llasat, Maria Carmen", "Provenzale, Antonello"], "abstract": "Abstract The observed trend towards warmer and drier conditions in southern Europe is projected to continue in the next decades, possibly leading to increased risk of large fires. However, an assessment of climate change impacts on fires at and above the 1.5 °C Paris target is still missing. Here, we estimate future summer burned area in Mediterranean Europe under 1.5, 2, and 3 °C global warming scenarios, accounting for possible modifications of climate-fire relationships under changed climatic conditions owing to productivity alterations. We found that such modifications could be beneficial, roughly halving the fire-intensifying signals. In any case, the burned area is robustly projected to increase. The higher the warming level is, the larger is the increase of burned area, ranging from ~40% to ~100% across the scenarios. Our results indicate that significant benefits would be obtained if warming were limited to well below 2 °C.", "type": "journal-article", "score": 26.63439, "source_query": "Climate warming alters urban fire activity worldwide including building fires", "citation_marker": "(Turco et al., 2018)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\n%A Turco, Marco\n%A Rosa-Cánovas, Juan José\n%A Bedia, Joaquín\n%A Jerez, Sonia\n%A Montávez, Juan Pedro\n%A Llasat, Maria Carmen\n%A Provenzale, Antonello\n%J Nature Communications\n%V 9\n%N 1\n%P 3821\n%D 2018\n%@ 2041-1723\n%R 10.1038/s41467-018-06358-z\n%U https://doi.org/10.1038/s41467-018-06358-z", "ris_record": "TY  - JOUR\nTI  - Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\nAU  - Turco, Marco\nAU  - Rosa-Cánovas, Juan José\nAU  - Bedia, Joaquín\nAU  - Jerez, Sonia\nAU  - Montávez, Juan Pedro\nAU  - Llasat, Maria Carmen\nAU  - Provenzale, Antonello\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2018\nY1  - 2018/10/02\nVL  - 9\nIS  - 1\nSP  - 3821\nDO  - 10.1038/s41467-018-06358-z\nUR  - https://doi.org/10.1038/s41467-018-06358-z\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2041-1723:vol:9:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41467-018-06358-z\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2041-1723:vol:9:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Turco</foaf:surname>\n                        <foaf:givenName>Marco</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Rosa-Cánovas</foaf:surname>\n                        <foaf:givenName>Juan José</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Bedia</foaf:surname>\n                        <foaf:givenName>Joaquín</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Jerez</foaf:surname>\n                        <foaf:givenName>Sonia</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Montávez</foaf:surname>\n                        <foaf:givenName>Juan Pedro</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Llasat</foaf:surname>\n                        <foaf:givenName>Maria Carmen</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Provenzale</foaf:surname>\n                        <foaf:givenName>Antonello</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models</dc:title>\n        <dc:date>2018-10-02</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41467-018-06358-z</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41467-018-06358-z</dc:identifier>\n        <bib:pages>3821</bib:pages>\n        <z:citationKey>turcoExacerbatedFiresIn2018</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2041-1723:vol:9:issue:1\">\n        <prism:volume>9</prism:volume>\n        <dc:title>Nature Communications</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2041-1723</dc:identifier>\n    </bib:Journal>"}, {"title": "Climate change is increasingly affecting fires worldwide", "journal": "Nature Climate Change", "family": "Nature Portfolio", "year": "2024", "doi": "10.1038/s41558-024-02141-9", "url": "https://doi.org/10.1038/s41558-024-02141-9", "doi_url": "https://doi.org/10.1038/s41558-024-02141-9", "volume": "14", "issue": "11", "start_page": "1123", "end_page": "1124", "issn": "1758-678X", "authors": [], "abstract": "", "type": "journal-article", "score": 26.221348, "source_query": "Climate warming alters urban fire activity worldwide including building fires", "citation_marker": "(Unknown author et al., 2024)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Climate change is increasingly affecting fires worldwide\n%J Nature Climate Change\n%V 14\n%N 11\n%P 1123-1124\n%D 2024\n%@ 1758-678X\n%R 10.1038/s41558-024-02141-9\n%U https://doi.org/10.1038/s41558-024-02141-9", "ris_record": "TY  - JOUR\nTI  - Climate change is increasingly affecting fires worldwide\nT2  - Nature Climate Change\nJO  - Nature Climate Change\nPY  - 2024\nY1  - 2024/11/01\nVL  - 14\nIS  - 11\nSP  - 1123\nEP  - 1124\nDO  - 10.1038/s41558-024-02141-9\nUR  - https://doi.org/10.1038/s41558-024-02141-9\nSN  - 1758-678X\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:1758-678x:vol:14:issue:11", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41558-024-02141-9\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:1758-678x:vol:14:issue:11\"/>\n        <dc:title>Climate change is increasingly affecting fires worldwide</dc:title>\n        <dc:date>2024-11-01</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41558-024-02141-9</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41558-024-02141-9</dc:identifier>\n        <bib:pages>1123-1124</bib:pages>\n        <z:citationKey>unknown-authorClimateChangeIs2024</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:1758-678x:vol:14:issue:11\">\n        <prism:volume>14</prism:volume>\n        <dc:title>Nature Climate Change</dc:title>\n        <prism:number>11</prism:number>\n        <dc:identifier>ISSN 1758-678X</dc:identifier>\n    </bib:Journal>"}, {"title": "Increasing fire risks in cities worldwide under warming climate", "journal": "Nature Cities", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s44284-025-00204-2", "url": "https://doi.org/10.1038/s44284-025-00204-2", "doi_url": "https://doi.org/10.1038/s44284-025-00204-2", "volume": "2", "issue": "3", "start_page": "254", "end_page": "264", "issn": "2731-9997", "authors": ["Shi, Long", "Wang, Jinhui", "Li, Guohui", "Chew, Michael Yit Lin", "Zhang, Heping", "Zhang, Guomin", "Dlugogorski, Bogdan Z."], "abstract": "", "type": "journal-article", "score": 25.89434, "source_query": "Climate warming alters urban fire activity worldwide including building fires", "citation_marker": "(Shi et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Increasing fire risks in cities worldwide under warming climate\n%A Shi, Long\n%A Wang, Jinhui\n%A Li, Guohui\n%A Chew, Michael Yit Lin\n%A Zhang, Heping\n%A Zhang, Guomin\n%A Dlugogorski, Bogdan Z.\n%J Nature Cities\n%V 2\n%N 3\n%P 254-264\n%D 2025\n%@ 2731-9997\n%R 10.1038/s44284-025-00204-2\n%U https://doi.org/10.1038/s44284-025-00204-2", "ris_record": "TY  - JOUR\nTI  - Increasing fire risks in cities worldwide under warming climate\nAU  - Shi, Long\nAU  - Wang, Jinhui\nAU  - Li, Guohui\nAU  - Chew, Michael Yit Lin\nAU  - Zhang, Heping\nAU  - Zhang, Guomin\nAU  - Dlugogorski, Bogdan Z.\nT2  - Nature Cities\nJO  - Nature Cities\nPY  - 2025\nY1  - 2025/03/03\nVL  - 2\nIS  - 3\nSP  - 254\nEP  - 264\nDO  - 10.1038/s44284-025-00204-2\nUR  - https://doi.org/10.1038/s44284-025-00204-2\nSN  - 2731-9997\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2731-9997:vol:2:issue:3", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s44284-025-00204-2\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2731-9997:vol:2:issue:3\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Shi</foaf:surname>\n                        <foaf:givenName>Long</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Wang</foaf:surname>\n                        <foaf:givenName>Jinhui</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Li</foaf:surname>\n                        <foaf:givenName>Guohui</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Chew</foaf:surname>\n                        <foaf:givenName>Michael Yit Lin</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Zhang</foaf:surname>\n                        <foaf:givenName>Heping</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Zhang</foaf:surname>\n                        <foaf:givenName>Guomin</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Dlugogorski</foaf:surname>\n                        <foaf:givenName>Bogdan Z.</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Increasing fire risks in cities worldwide under warming climate</dc:title>\n        <dc:date>2025-03-03</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s44284-025-00204-2</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s44284-025-00204-2</dc:identifier>\n        <bib:pages>254-264</bib:pages>\n        <z:citationKey>shiIncreasingFireRisks2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2731-9997:vol:2:issue:3\">\n        <prism:volume>2</prism:volume>\n        <dc:title>Nature Cities</dc:title>\n        <prism:number>3</prism:number>\n        <dc:identifier>ISSN 2731-9997</dc:identifier>\n    </bib:Journal>"}, {"title": "Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2026", "doi": "10.1038/s41598-026-37372-7", "url": "https://doi.org/10.1038/s41598-026-37372-7", "doi_url": "https://doi.org/10.1038/s41598-026-37372-7", "volume": "16", "issue": "1", "start_page": "9012", "end_page": "", "issn": "2045-2322", "authors": ["Guo, Johnny", "Lee, Xuhui", "Zhang, Keer"], "abstract": "", "type": "journal-article", "score": 24.208181, "source_query": "Short-lived extreme heat influence building-fire occurrence but global event-day analysis using same-location", "citation_marker": "(Guo et al., 2026)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves\n%A Guo, Johnny\n%A Lee, Xuhui\n%A Zhang, Keer\n%J Scientific Reports\n%V 16\n%N 1\n%P 9012\n%D 2026\n%@ 2045-2322\n%R 10.1038/s41598-026-37372-7\n%U https://doi.org/10.1038/s41598-026-37372-7", "ris_record": "TY  - JOUR\nTI  - Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves\nAU  - Guo, Johnny\nAU  - Lee, Xuhui\nAU  - Zhang, Keer\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2026\nY1  - 2026/02/14\nVL  - 16\nIS  - 1\nSP  - 9012\nDO  - 10.1038/s41598-026-37372-7\nUR  - https://doi.org/10.1038/s41598-026-37372-7\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:16:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-026-37372-7\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:16:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Guo</foaf:surname>\n                        <foaf:givenName>Johnny</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Lee</foaf:surname>\n                        <foaf:givenName>Xuhui</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Zhang</foaf:surname>\n                        <foaf:givenName>Keer</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves</dc:title>\n        <dc:date>2026-02-14</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-026-37372-7</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-026-37372-7</dc:identifier>\n        <bib:pages>9012</bib:pages>\n        <z:citationKey>guoGlobalSpatiotemporalAnalysis2026</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:16:issue:1\">\n        <prism:volume>16</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}, {"title": "SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s41598-025-99997-4", "url": "https://doi.org/10.1038/s41598-025-99997-4", "doi_url": "https://doi.org/10.1038/s41598-025-99997-4", "volume": "15", "issue": "1", "start_page": "15111", "end_page": "", "issn": "2045-2322", "authors": ["Han, Seongil", "Jung, Haemin", "Yoo, Paul D."], "abstract": "Abstract The Basel Accord emphasizes the necessity of employing internal data models to manage key credit risk components, including Probability of Default (PD), Loss Given Default (LGD), and Exposure At Default (EAD). Among these, internal datasets are critical for estimating PD, a fundamental measure of borrower creditworthiness. Nevertheless, practical application often faces challenges due to incomplete datasets, which can skew analyses and undermine the accuracy of credit scoring models. Traditional approaches to addressing missing data, such as sample deletion or mean imputation, are widely used; however, they often prove insufficient for accurate prediction. Consequently, imputation methods are typically favored over deletion, as they allow for the full utilization of available data. Recent advancements have introduced more sophisticated techniques, such as Generative Adversarial Imputation Networks (GAIN), which utilize a generative adversarial network to model data distributions and impute missing values with greater precision than conventional methods. Building on these developments, this study proposes a novel imputation approach, SMART (Structured Missingness Analysis and Reconstruction Technique) for credit scoring datasets. SMART consists of two primary stages: first, it normalizes and denoises the dataset using randomized Singular Value Decomposition (rSVD), followed by the implementation of GAIN to impute missing values. Experimental results demonstrate that SMART significantly outperforms existing state-of-the-art methods, particularly in high missing data contexts (20%, 50%, and 80%), with improvements in imputation accuracy of 7.04%, 6.34%, and 13.38%, respectively. In conclusion, SMART represents a substantial advancement in handling incomplete credit scoring datasets, leading to more precise PD estimation and enhancing the robustness of credit risk management models.", "type": "journal-article", "score": 21.825766, "source_query": "Global event databases have geographically structured ascertainment missingness so raw documented-record counts", "citation_marker": "(Han et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring\n%A Han, Seongil\n%A Jung, Haemin\n%A Yoo, Paul D.\n%J Scientific Reports\n%V 15\n%N 1\n%P 15111\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-99997-4\n%U https://doi.org/10.1038/s41598-025-99997-4", "ris_record": "TY  - JOUR\nTI  - SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring\nAU  - Han, Seongil\nAU  - Jung, Haemin\nAU  - Yoo, Paul D.\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/04/29\nVL  - 15\nIS  - 1\nSP  - 15111\nDO  - 10.1038/s41598-025-99997-4\nUR  - https://doi.org/10.1038/s41598-025-99997-4\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:15:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-025-99997-4\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:15:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Han</foaf:surname>\n                        <foaf:givenName>Seongil</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Jung</foaf:surname>\n                        <foaf:givenName>Haemin</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Yoo</foaf:surname>\n                        <foaf:givenName>Paul D.</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring</dc:title>\n        <dc:date>2025-04-29</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-025-99997-4</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-025-99997-4</dc:identifier>\n        <bib:pages>15111</bib:pages>\n        <z:citationKey>hanSmartStructuredMissingness2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:15:issue:1\">\n        <prism:volume>15</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}, {"title": "Boosting power for time-to-event GWAS analysis affected by case ascertainment", "journal": "Nature Computational Science", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s43588-025-00892-9", "url": "https://doi.org/10.1038/s43588-025-00892-9", "doi_url": "https://doi.org/10.1038/s43588-025-00892-9", "volume": "5", "issue": "11", "start_page": "996", "end_page": "997", "issn": "2662-8457", "authors": [], "abstract": "", "type": "journal-article", "score": 20.232649, "source_query": "Global event databases have geographically structured ascertainment missingness so raw documented-record counts", "citation_marker": "(Unknown author et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Boosting power for time-to-event GWAS analysis affected by case ascertainment\n%J Nature Computational Science\n%V 5\n%N 11\n%P 996-997\n%D 2025\n%@ 2662-8457\n%R 10.1038/s43588-025-00892-9\n%U https://doi.org/10.1038/s43588-025-00892-9", "ris_record": "TY  - JOUR\nTI  - Boosting power for time-to-event GWAS analysis affected by case ascertainment\nT2  - Nature Computational Science\nJO  - Nature Computational Science\nPY  - 2025\nY1  - 2025/10/02\nVL  - 5\nIS  - 11\nSP  - 996\nEP  - 997\nDO  - 10.1038/s43588-025-00892-9\nUR  - https://doi.org/10.1038/s43588-025-00892-9\nSN  - 2662-8457\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2662-8457:vol:5:issue:11", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s43588-025-00892-9\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2662-8457:vol:5:issue:11\"/>\n        <dc:title>Boosting power for time-to-event GWAS analysis affected by case ascertainment</dc:title>\n        <dc:date>2025-10-02</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s43588-025-00892-9</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s43588-025-00892-9</dc:identifier>\n        <bib:pages>996-997</bib:pages>\n        <z:citationKey>unknown-authorBoostingPowerFor2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2662-8457:vol:5:issue:11\">\n        <prism:volume>5</prism:volume>\n        <dc:title>Nature Computational Science</dc:title>\n        <prism:number>11</prism:number>\n        <dc:identifier>ISSN 2662-8457</dc:identifier>\n    </bib:Journal>"}, {"title": "Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation", "journal": "npj Urban Sustainability", "family": "Nature Portfolio", "year": "2023", "doi": "10.1038/s42949-023-00112-1", "url": "https://doi.org/10.1038/s42949-023-00112-1", "doi_url": "https://doi.org/10.1038/s42949-023-00112-1", "volume": "3", "issue": "1", "start_page": "40", "end_page": "", "issn": "2661-8001", "authors": ["Marwal, Aviral", "Silva, Elisabete A."], "abstract": "Abstract Previous studies have established a significant link between urban form and sustainability. However, the diversity of micro-scale urban forms in cities in the global south has received limited attention, hindered by the lack of neighbourhood-level spatial data and maps, which poses challenges in exploring micro-urban form features. The study addresses this gap using a grid-based k-means clustering algorithm to identify residential built-up form typologies in Delhi and assess their impact on sustainable urbanisation. The algorithm clusters 100×100 metre grid cells based on their attributes of accessibility, built-up density, and street design. The results show six distinct built-up form typologies in Delhi. However, only 19% of residential areas meet the criteria for sustainable urbanisation, highlighting the need for planning interventions in most areas. The study methodology can be applied to analyse micro-scale urban form features in other cities in the global south, providing a fresh perspective on urbanisation research.", "type": "journal-article", "score": 21.709213, "source_query": "Population built form shape urban fire exposure but", "citation_marker": "(Marwal et al., 2023)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation\n%A Marwal, Aviral\n%A Silva, Elisabete A.\n%J npj Urban Sustainability\n%V 3\n%N 1\n%P 40\n%D 2023\n%@ 2661-8001\n%R 10.1038/s42949-023-00112-1\n%U https://doi.org/10.1038/s42949-023-00112-1", "ris_record": "TY  - JOUR\nTI  - Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation\nAU  - Marwal, Aviral\nAU  - Silva, Elisabete A.\nT2  - npj Urban Sustainability\nJO  - npj Urban Sustainability\nPY  - 2023\nY1  - 2023/06/26\nVL  - 3\nIS  - 1\nSP  - 40\nDO  - 10.1038/s42949-023-00112-1\nUR  - https://doi.org/10.1038/s42949-023-00112-1\nSN  - 2661-8001\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2661-8001:vol:3:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s42949-023-00112-1\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2661-8001:vol:3:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Marwal</foaf:surname>\n                        <foaf:givenName>Aviral</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Silva</foaf:surname>\n                        <foaf:givenName>Elisabete A.</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation</dc:title>\n        <dc:date>2023-06-26</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s42949-023-00112-1</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s42949-023-00112-1</dc:identifier>\n        <bib:pages>40</bib:pages>\n        <z:citationKey>marwalExploringResidentialBuilt2023</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2661-8001:vol:3:issue:1\">\n        <prism:volume>3</prism:volume>\n        <dc:title>npj Urban Sustainability</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2661-8001</dc:identifier>\n    </bib:Journal>"}, {"title": "Forecasting urban fire severity for enhanced emergency response and resource allocation", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s41598-025-26006-z", "url": "https://doi.org/10.1038/s41598-025-26006-z", "doi_url": "https://doi.org/10.1038/s41598-025-26006-z", "volume": "15", "issue": "1", "start_page": "42165", "end_page": "", "issn": "2045-2322", "authors": ["Lee, Shao-Lun", "Hsu, Mei-Hua", "Wang, Yi-Fan", "Wang, Max Yue-Feng"], "abstract": "", "type": "journal-article", "score": 38.45803, "source_query": "Fire-service capacity and resource allocation are relevant to urban fire consequences while cross-national resource statistics can differ in reference year and reporting system", "citation_marker": "(Lee et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Forecasting urban fire severity for enhanced emergency response and resource allocation\n%A Lee, Shao-Lun\n%A Hsu, Mei-Hua\n%A Wang, Yi-Fan\n%A Wang, Max Yue-Feng\n%J Scientific Reports\n%V 15\n%N 1\n%P 42165\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-26006-z\n%U https://doi.org/10.1038/s41598-025-26006-z", "ris_record": "TY  - JOUR\nTI  - Forecasting urban fire severity for enhanced emergency response and resource allocation\nAU  - Lee, Shao-Lun\nAU  - Hsu, Mei-Hua\nAU  - Wang, Yi-Fan\nAU  - Wang, Max Yue-Feng\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/11/26\nVL  - 15\nIS  - 1\nSP  - 42165\nDO  - 10.1038/s41598-025-26006-z\nUR  - https://doi.org/10.1038/s41598-025-26006-z\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:15:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-025-26006-z\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:15:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Lee</foaf:surname>\n                        <foaf:givenName>Shao-Lun</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Hsu</foaf:surname>\n                        <foaf:givenName>Mei-Hua</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Wang</foaf:surname>\n                        <foaf:givenName>Yi-Fan</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Wang</foaf:surname>\n                        <foaf:givenName>Max Yue-Feng</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Forecasting urban fire severity for enhanced emergency response and resource allocation</dc:title>\n        <dc:date>2025-11-26</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-025-26006-z</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-025-26006-z</dc:identifier>\n        <bib:pages>42165</bib:pages>\n        <z:citationKey>leeForecastingUrbanFire2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:15:issue:1\">\n        <prism:volume>15</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}], "segments": [{"id": "S001", "order": 1, "text": "Climate warming alters urban fire activity worldwide, including building fires.", "query": "Climate warming alters urban fire activity worldwide including building fires", "suggestedInsertText": "(Turco et al., 2018) (Unknown author et al., 2024)", "references": [{"title": "Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models", "journal": "Nature Communications", "family": "Nature Portfolio", "year": "2018", "doi": "10.1038/s41467-018-06358-z", "url": "https://doi.org/10.1038/s41467-018-06358-z", "doi_url": "https://doi.org/10.1038/s41467-018-06358-z", "volume": "9", "issue": "1", "start_page": "3821", "end_page": "", "issn": "2041-1723", "authors": ["Turco, Marco", "Rosa-Cánovas, Juan José", "Bedia, Joaquín", "Jerez, Sonia", "Montávez, Juan Pedro", "Llasat, Maria Carmen", "Provenzale, Antonello"], "abstract": "Abstract The observed trend towards warmer and drier conditions in southern Europe is projected to continue in the next decades, possibly leading to increased risk of large fires. However, an assessment of climate change impacts on fires at and above the 1.5 °C Paris target is still missing. Here, we estimate future summer burned area in Mediterranean Europe under 1.5, 2, and 3 °C global warming scenarios, accounting for possible modifications of climate-fire relationships under changed climatic conditions owing to productivity alterations. We found that such modifications could be beneficial, roughly halving the fire-intensifying signals. In any case, the burned area is robustly projected to increase. The higher the warming level is, the larger is the increase of burned area, ranging from ~40% to ~100% across the scenarios. Our results indicate that significant benefits would be obtained if warming were limited to well below 2 °C.", "type": "journal-article", "score": 26.63439, "source_query": "Climate warming alters urban fire activity worldwide including building fires", "citation_marker": "(Turco et al., 2018)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\n%A Turco, Marco\n%A Rosa-Cánovas, Juan José\n%A Bedia, Joaquín\n%A Jerez, Sonia\n%A Montávez, Juan Pedro\n%A Llasat, Maria Carmen\n%A Provenzale, Antonello\n%J Nature Communications\n%V 9\n%N 1\n%P 3821\n%D 2018\n%@ 2041-1723\n%R 10.1038/s41467-018-06358-z\n%U https://doi.org/10.1038/s41467-018-06358-z", "ris_record": "TY  - JOUR\nTI  - Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\nAU  - Turco, Marco\nAU  - Rosa-Cánovas, Juan José\nAU  - Bedia, Joaquín\nAU  - Jerez, Sonia\nAU  - Montávez, Juan Pedro\nAU  - Llasat, Maria Carmen\nAU  - Provenzale, Antonello\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2018\nY1  - 2018/10/02\nVL  - 9\nIS  - 1\nSP  - 3821\nDO  - 10.1038/s41467-018-06358-z\nUR  - https://doi.org/10.1038/s41467-018-06358-z\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2041-1723:vol:9:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41467-018-06358-z\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2041-1723:vol:9:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Turco</foaf:surname>\n                        <foaf:givenName>Marco</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Rosa-Cánovas</foaf:surname>\n                        <foaf:givenName>Juan José</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Bedia</foaf:surname>\n                        <foaf:givenName>Joaquín</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Jerez</foaf:surname>\n                        <foaf:givenName>Sonia</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Montávez</foaf:surname>\n                        <foaf:givenName>Juan Pedro</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Llasat</foaf:surname>\n                        <foaf:givenName>Maria Carmen</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Provenzale</foaf:surname>\n                        <foaf:givenName>Antonello</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models</dc:title>\n        <dc:date>2018-10-02</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41467-018-06358-z</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41467-018-06358-z</dc:identifier>\n        <bib:pages>3821</bib:pages>\n        <z:citationKey>turcoExacerbatedFiresIn2018</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2041-1723:vol:9:issue:1\">\n        <prism:volume>9</prism:volume>\n        <dc:title>Nature Communications</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2041-1723</dc:identifier>\n    </bib:Journal>"}, {"title": "Climate change is increasingly affecting fires worldwide", "journal": "Nature Climate Change", "family": "Nature Portfolio", "year": "2024", "doi": "10.1038/s41558-024-02141-9", "url": "https://doi.org/10.1038/s41558-024-02141-9", "doi_url": "https://doi.org/10.1038/s41558-024-02141-9", "volume": "14", "issue": "11", "start_page": "1123", "end_page": "1124", "issn": "1758-678X", "authors": [], "abstract": "", "type": "journal-article", "score": 26.221348, "source_query": "Climate warming alters urban fire activity worldwide including building fires", "citation_marker": "(Unknown author et al., 2024)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Climate change is increasingly affecting fires worldwide\n%J Nature Climate Change\n%V 14\n%N 11\n%P 1123-1124\n%D 2024\n%@ 1758-678X\n%R 10.1038/s41558-024-02141-9\n%U https://doi.org/10.1038/s41558-024-02141-9", "ris_record": "TY  - JOUR\nTI  - Climate change is increasingly affecting fires worldwide\nT2  - Nature Climate Change\nJO  - Nature Climate Change\nPY  - 2024\nY1  - 2024/11/01\nVL  - 14\nIS  - 11\nSP  - 1123\nEP  - 1124\nDO  - 10.1038/s41558-024-02141-9\nUR  - https://doi.org/10.1038/s41558-024-02141-9\nSN  - 1758-678X\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:1758-678x:vol:14:issue:11", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41558-024-02141-9\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:1758-678x:vol:14:issue:11\"/>\n        <dc:title>Climate change is increasingly affecting fires worldwide</dc:title>\n        <dc:date>2024-11-01</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41558-024-02141-9</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41558-024-02141-9</dc:identifier>\n        <bib:pages>1123-1124</bib:pages>\n        <z:citationKey>unknown-authorClimateChangeIs2024</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:1758-678x:vol:14:issue:11\">\n        <prism:volume>14</prism:volume>\n        <dc:title>Nature Climate Change</dc:title>\n        <prism:number>11</prism:number>\n        <dc:identifier>ISSN 1758-678X</dc:identifier>\n    </bib:Journal>"}, {"title": "Increasing fire risks in cities worldwide under warming climate", "journal": "Nature Cities", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s44284-025-00204-2", "url": "https://doi.org/10.1038/s44284-025-00204-2", "doi_url": "https://doi.org/10.1038/s44284-025-00204-2", "volume": "2", "issue": "3", "start_page": "254", "end_page": "264", "issn": "2731-9997", "authors": ["Shi, Long", "Wang, Jinhui", "Li, Guohui", "Chew, Michael Yit Lin", "Zhang, Heping", "Zhang, Guomin", "Dlugogorski, Bogdan Z."], "abstract": "", "type": "journal-article", "score": 25.89434, "source_query": "Climate warming alters urban fire activity worldwide including building fires", "citation_marker": "(Shi et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Increasing fire risks in cities worldwide under warming climate\n%A Shi, Long\n%A Wang, Jinhui\n%A Li, Guohui\n%A Chew, Michael Yit Lin\n%A Zhang, Heping\n%A Zhang, Guomin\n%A Dlugogorski, Bogdan Z.\n%J Nature Cities\n%V 2\n%N 3\n%P 254-264\n%D 2025\n%@ 2731-9997\n%R 10.1038/s44284-025-00204-2\n%U https://doi.org/10.1038/s44284-025-00204-2", "ris_record": "TY  - JOUR\nTI  - Increasing fire risks in cities worldwide under warming climate\nAU  - Shi, Long\nAU  - Wang, Jinhui\nAU  - Li, Guohui\nAU  - Chew, Michael Yit Lin\nAU  - Zhang, Heping\nAU  - Zhang, Guomin\nAU  - Dlugogorski, Bogdan Z.\nT2  - Nature Cities\nJO  - Nature Cities\nPY  - 2025\nY1  - 2025/03/03\nVL  - 2\nIS  - 3\nSP  - 254\nEP  - 264\nDO  - 10.1038/s44284-025-00204-2\nUR  - https://doi.org/10.1038/s44284-025-00204-2\nSN  - 2731-9997\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2731-9997:vol:2:issue:3", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s44284-025-00204-2\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2731-9997:vol:2:issue:3\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Shi</foaf:surname>\n                        <foaf:givenName>Long</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Wang</foaf:surname>\n                        <foaf:givenName>Jinhui</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Li</foaf:surname>\n                        <foaf:givenName>Guohui</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Chew</foaf:surname>\n                        <foaf:givenName>Michael Yit Lin</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Zhang</foaf:surname>\n                        <foaf:givenName>Heping</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Zhang</foaf:surname>\n                        <foaf:givenName>Guomin</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Dlugogorski</foaf:surname>\n                        <foaf:givenName>Bogdan Z.</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Increasing fire risks in cities worldwide under warming climate</dc:title>\n        <dc:date>2025-03-03</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s44284-025-00204-2</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s44284-025-00204-2</dc:identifier>\n        <bib:pages>254-264</bib:pages>\n        <z:citationKey>shiIncreasingFireRisks2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2731-9997:vol:2:issue:3\">\n        <prism:volume>2</prism:volume>\n        <dc:title>Nature Cities</dc:title>\n        <prism:number>3</prism:number>\n        <dc:identifier>ISSN 2731-9997</dc:identifier>\n    </bib:Journal>"}]}, {"id": "S002", "order": 2, "text": "Short-lived extreme heat may influence building-fire occurrence, but a global event-day analysis using same-location matched control days remains an unresolved design gap.", "query": "Short-lived extreme heat may influence building-fire occurrence but a global event-day analysis using same-location matched control days remains an unresolved design gap", "suggestedInsertText": "(Guo et al., 2026)", "references": [{"title": "Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2026", "doi": "10.1038/s41598-026-37372-7", "url": "https://doi.org/10.1038/s41598-026-37372-7", "doi_url": "https://doi.org/10.1038/s41598-026-37372-7", "volume": "16", "issue": "1", "start_page": "9012", "end_page": "", "issn": "2045-2322", "authors": ["Guo, Johnny", "Lee, Xuhui", "Zhang, Keer"], "abstract": "", "type": "journal-article", "score": 24.208181, "source_query": "Short-lived extreme heat influence building-fire occurrence but global event-day analysis using same-location", "citation_marker": "(Guo et al., 2026)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves\n%A Guo, Johnny\n%A Lee, Xuhui\n%A Zhang, Keer\n%J Scientific Reports\n%V 16\n%N 1\n%P 9012\n%D 2026\n%@ 2045-2322\n%R 10.1038/s41598-026-37372-7\n%U https://doi.org/10.1038/s41598-026-37372-7", "ris_record": "TY  - JOUR\nTI  - Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves\nAU  - Guo, Johnny\nAU  - Lee, Xuhui\nAU  - Zhang, Keer\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2026\nY1  - 2026/02/14\nVL  - 16\nIS  - 1\nSP  - 9012\nDO  - 10.1038/s41598-026-37372-7\nUR  - https://doi.org/10.1038/s41598-026-37372-7\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:16:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-026-37372-7\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:16:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Guo</foaf:surname>\n                        <foaf:givenName>Johnny</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Lee</foaf:surname>\n                        <foaf:givenName>Xuhui</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Zhang</foaf:surname>\n                        <foaf:givenName>Keer</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Global spatiotemporal analysis of interactions between urban heat islands and extreme heat waves</dc:title>\n        <dc:date>2026-02-14</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-026-37372-7</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-026-37372-7</dc:identifier>\n        <bib:pages>9012</bib:pages>\n        <z:citationKey>guoGlobalSpatiotemporalAnalysis2026</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:16:issue:1\">\n        <prism:volume>16</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}]}, {"id": "S003", "order": 3, "text": "Global event databases can have geographically structured ascertainment and missingness, so raw documented-record counts need not represent population incidence.", "query": "Global event databases can have geographically structured ascertainment and missingness so raw documented-record counts need not represent population incidence", "suggestedInsertText": "(Han et al., 2025) (Unknown author et al., 2025)", "references": [{"title": "SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s41598-025-99997-4", "url": "https://doi.org/10.1038/s41598-025-99997-4", "doi_url": "https://doi.org/10.1038/s41598-025-99997-4", "volume": "15", "issue": "1", "start_page": "15111", "end_page": "", "issn": "2045-2322", "authors": ["Han, Seongil", "Jung, Haemin", "Yoo, Paul D."], "abstract": "Abstract The Basel Accord emphasizes the necessity of employing internal data models to manage key credit risk components, including Probability of Default (PD), Loss Given Default (LGD), and Exposure At Default (EAD). Among these, internal datasets are critical for estimating PD, a fundamental measure of borrower creditworthiness. Nevertheless, practical application often faces challenges due to incomplete datasets, which can skew analyses and undermine the accuracy of credit scoring models. Traditional approaches to addressing missing data, such as sample deletion or mean imputation, are widely used; however, they often prove insufficient for accurate prediction. Consequently, imputation methods are typically favored over deletion, as they allow for the full utilization of available data. Recent advancements have introduced more sophisticated techniques, such as Generative Adversarial Imputation Networks (GAIN), which utilize a generative adversarial network to model data distributions and impute missing values with greater precision than conventional methods. Building on these developments, this study proposes a novel imputation approach, SMART (Structured Missingness Analysis and Reconstruction Technique) for credit scoring datasets. SMART consists of two primary stages: first, it normalizes and denoises the dataset using randomized Singular Value Decomposition (rSVD), followed by the implementation of GAIN to impute missing values. Experimental results demonstrate that SMART significantly outperforms existing state-of-the-art methods, particularly in high missing data contexts (20%, 50%, and 80%), with improvements in imputation accuracy of 7.04%, 6.34%, and 13.38%, respectively. In conclusion, SMART represents a substantial advancement in handling incomplete credit scoring datasets, leading to more precise PD estimation and enhancing the robustness of credit risk management models.", "type": "journal-article", "score": 21.825766, "source_query": "Global event databases have geographically structured ascertainment missingness so raw documented-record counts", "citation_marker": "(Han et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring\n%A Han, Seongil\n%A Jung, Haemin\n%A Yoo, Paul D.\n%J Scientific Reports\n%V 15\n%N 1\n%P 15111\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-99997-4\n%U https://doi.org/10.1038/s41598-025-99997-4", "ris_record": "TY  - JOUR\nTI  - SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring\nAU  - Han, Seongil\nAU  - Jung, Haemin\nAU  - Yoo, Paul D.\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/04/29\nVL  - 15\nIS  - 1\nSP  - 15111\nDO  - 10.1038/s41598-025-99997-4\nUR  - https://doi.org/10.1038/s41598-025-99997-4\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:15:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-025-99997-4\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:15:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Han</foaf:surname>\n                        <foaf:givenName>Seongil</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Jung</foaf:surname>\n                        <foaf:givenName>Haemin</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Yoo</foaf:surname>\n                        <foaf:givenName>Paul D.</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>SMART: Structured Missingness Analysis and Reconstruction Technique for credit scoring</dc:title>\n        <dc:date>2025-04-29</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-025-99997-4</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-025-99997-4</dc:identifier>\n        <bib:pages>15111</bib:pages>\n        <z:citationKey>hanSmartStructuredMissingness2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:15:issue:1\">\n        <prism:volume>15</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}, {"title": "Boosting power for time-to-event GWAS analysis affected by case ascertainment", "journal": "Nature Computational Science", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s43588-025-00892-9", "url": "https://doi.org/10.1038/s43588-025-00892-9", "doi_url": "https://doi.org/10.1038/s43588-025-00892-9", "volume": "5", "issue": "11", "start_page": "996", "end_page": "997", "issn": "2662-8457", "authors": [], "abstract": "", "type": "journal-article", "score": 20.232649, "source_query": "Global event databases have geographically structured ascertainment missingness so raw documented-record counts", "citation_marker": "(Unknown author et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Boosting power for time-to-event GWAS analysis affected by case ascertainment\n%J Nature Computational Science\n%V 5\n%N 11\n%P 996-997\n%D 2025\n%@ 2662-8457\n%R 10.1038/s43588-025-00892-9\n%U https://doi.org/10.1038/s43588-025-00892-9", "ris_record": "TY  - JOUR\nTI  - Boosting power for time-to-event GWAS analysis affected by case ascertainment\nT2  - Nature Computational Science\nJO  - Nature Computational Science\nPY  - 2025\nY1  - 2025/10/02\nVL  - 5\nIS  - 11\nSP  - 996\nEP  - 997\nDO  - 10.1038/s43588-025-00892-9\nUR  - https://doi.org/10.1038/s43588-025-00892-9\nSN  - 2662-8457\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2662-8457:vol:5:issue:11", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s43588-025-00892-9\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2662-8457:vol:5:issue:11\"/>\n        <dc:title>Boosting power for time-to-event GWAS analysis affected by case ascertainment</dc:title>\n        <dc:date>2025-10-02</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s43588-025-00892-9</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s43588-025-00892-9</dc:identifier>\n        <bib:pages>996-997</bib:pages>\n        <z:citationKey>unknown-authorBoostingPowerFor2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2662-8457:vol:5:issue:11\">\n        <prism:volume>5</prism:volume>\n        <dc:title>Nature Computational Science</dc:title>\n        <prism:number>11</prism:number>\n        <dc:identifier>ISSN 2662-8457</dc:identifier>\n    </bib:Journal>"}]}, {"id": "S004", "order": 4, "text": "Population and built form shape urban fire exposure, but static spatial layers cannot identify an acute within-location weather association.", "query": "Population and built form shape urban fire exposure but static spatial layers cannot identify an acute within-location weather association", "suggestedInsertText": "(Marwal et al., 2023)", "references": [{"title": "Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation", "journal": "npj Urban Sustainability", "family": "Nature Portfolio", "year": "2023", "doi": "10.1038/s42949-023-00112-1", "url": "https://doi.org/10.1038/s42949-023-00112-1", "doi_url": "https://doi.org/10.1038/s42949-023-00112-1", "volume": "3", "issue": "1", "start_page": "40", "end_page": "", "issn": "2661-8001", "authors": ["Marwal, Aviral", "Silva, Elisabete A."], "abstract": "Abstract Previous studies have established a significant link between urban form and sustainability. However, the diversity of micro-scale urban forms in cities in the global south has received limited attention, hindered by the lack of neighbourhood-level spatial data and maps, which poses challenges in exploring micro-urban form features. The study addresses this gap using a grid-based k-means clustering algorithm to identify residential built-up form typologies in Delhi and assess their impact on sustainable urbanisation. The algorithm clusters 100×100 metre grid cells based on their attributes of accessibility, built-up density, and street design. The results show six distinct built-up form typologies in Delhi. However, only 19% of residential areas meet the criteria for sustainable urbanisation, highlighting the need for planning interventions in most areas. The study methodology can be applied to analyse micro-scale urban form features in other cities in the global south, providing a fresh perspective on urbanisation research.", "type": "journal-article", "score": 21.709213, "source_query": "Population built form shape urban fire exposure but", "citation_marker": "(Marwal et al., 2023)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation\n%A Marwal, Aviral\n%A Silva, Elisabete A.\n%J npj Urban Sustainability\n%V 3\n%N 1\n%P 40\n%D 2023\n%@ 2661-8001\n%R 10.1038/s42949-023-00112-1\n%U https://doi.org/10.1038/s42949-023-00112-1", "ris_record": "TY  - JOUR\nTI  - Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation\nAU  - Marwal, Aviral\nAU  - Silva, Elisabete A.\nT2  - npj Urban Sustainability\nJO  - npj Urban Sustainability\nPY  - 2023\nY1  - 2023/06/26\nVL  - 3\nIS  - 1\nSP  - 40\nDO  - 10.1038/s42949-023-00112-1\nUR  - https://doi.org/10.1038/s42949-023-00112-1\nSN  - 2661-8001\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2661-8001:vol:3:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s42949-023-00112-1\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2661-8001:vol:3:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Marwal</foaf:surname>\n                        <foaf:givenName>Aviral</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Silva</foaf:surname>\n                        <foaf:givenName>Elisabete A.</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Exploring residential built-up form typologies in Delhi: a grid-based clustering approach towards sustainable urbanisation</dc:title>\n        <dc:date>2023-06-26</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s42949-023-00112-1</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s42949-023-00112-1</dc:identifier>\n        <bib:pages>40</bib:pages>\n        <z:citationKey>marwalExploringResidentialBuilt2023</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2661-8001:vol:3:issue:1\">\n        <prism:volume>3</prism:volume>\n        <dc:title>npj Urban Sustainability</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2661-8001</dc:identifier>\n    </bib:Journal>"}]}, {"id": "S005", "order": 5, "text": "Fire-service capacity and resource allocation are relevant to urban fire consequences, while cross-national resource statistics can differ in reference year and reporting system.", "query": "Fire-service capacity and resource allocation are relevant to urban fire consequences while cross-national resource statistics can differ in reference year and reporting system", "suggestedInsertText": "(Lee et al., 2025)", "references": [{"title": "Forecasting urban fire severity for enhanced emergency response and resource allocation", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s41598-025-26006-z", "url": "https://doi.org/10.1038/s41598-025-26006-z", "doi_url": "https://doi.org/10.1038/s41598-025-26006-z", "volume": "15", "issue": "1", "start_page": "42165", "end_page": "", "issn": "2045-2322", "authors": ["Lee, Shao-Lun", "Hsu, Mei-Hua", "Wang, Yi-Fan", "Wang, Max Yue-Feng"], "abstract": "", "type": "journal-article", "score": 38.45803, "source_query": "Fire-service capacity and resource allocation are relevant to urban fire consequences while cross-national resource statistics can differ in reference year and reporting system", "citation_marker": "(Lee et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Forecasting urban fire severity for enhanced emergency response and resource allocation\n%A Lee, Shao-Lun\n%A Hsu, Mei-Hua\n%A Wang, Yi-Fan\n%A Wang, Max Yue-Feng\n%J Scientific Reports\n%V 15\n%N 1\n%P 42165\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-26006-z\n%U https://doi.org/10.1038/s41598-025-26006-z", "ris_record": "TY  - JOUR\nTI  - Forecasting urban fire severity for enhanced emergency response and resource allocation\nAU  - Lee, Shao-Lun\nAU  - Hsu, Mei-Hua\nAU  - Wang, Yi-Fan\nAU  - Wang, Max Yue-Feng\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/11/26\nVL  - 15\nIS  - 1\nSP  - 42165\nDO  - 10.1038/s41598-025-26006-z\nUR  - https://doi.org/10.1038/s41598-025-26006-z\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:15:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-025-26006-z\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:15:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Lee</foaf:surname>\n                        <foaf:givenName>Shao-Lun</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Hsu</foaf:surname>\n                        <foaf:givenName>Mei-Hua</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Wang</foaf:surname>\n                        <foaf:givenName>Yi-Fan</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Wang</foaf:surname>\n                        <foaf:givenName>Max Yue-Feng</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Forecasting urban fire severity for enhanced emergency response and resource allocation</dc:title>\n        <dc:date>2025-11-26</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-025-26006-z</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-025-26006-z</dc:identifier>\n        <bib:pages>42165</bib:pages>\n        <z:citationKey>leeForecastingUrbanFire2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:15:issue:1\">\n        <prism:volume>15</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}]}]}</script>
+  <script>
+    const data = JSON.parse(document.getElementById('citationData').textContent);
+    const modal = document.getElementById('summaryModal');
+    const closeSummary = document.getElementById('closeSummary');
+    const openSummary = document.getElementById('openSummary');
+    const yearFromInput = document.getElementById('yearFrom');
+    const yearToInput = document.getElementById('yearTo');
+    const queryFilterInput = document.getElementById('queryFilter');
+    const selectedOnlyInput = document.getElementById('selectedOnly');
+    const applyFiltersButton = document.getElementById('applyFilters');
+    const clearFiltersButton = document.getElementById('clearFilters');
+    const visibleCount = document.getElementById('visibleCount');
+    const selectedCount = document.getElementById('selectedCount');
+    const selectionList = document.getElementById('selectionList');
+    const selectionEmpty = document.getElementById('selectionEmpty');
+    const downloadSelected = document.getElementById('downloadSelected');
+    const downloadFormat = document.getElementById('downloadFormat');
+    const selectedMap = new Map();
+    let currentDownloadUrl = null;
+
+    downloadFormat.value = data.defaultExportFormat || 'enw';
+
+    function showModal() {
+      if (modal) {
+        modal.classList.remove('is-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+    }
+    function hideModal() {
+      if (modal) {
+        modal.classList.add('is-hidden');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+    window.addEventListener('DOMContentLoaded', showModal);
+    openSummary.addEventListener('click', showModal);
+    closeSummary.addEventListener('click', hideModal);
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        hideModal();
+      }
+    });
+
+    function revokeDownloadUrl() {
+      if (currentDownloadUrl) {
+        URL.revokeObjectURL(currentDownloadUrl);
+        currentDownloadUrl = null;
+      }
+    }
+
+    function selectedItems() {
+      return Array.from(selectedMap.values());
+    }
+
+    function exportItems() {
+      const items = selectedItems();
+      return items.length ? items : (data.references || []);
+    }
+
+    function buildEnw(items) {
+      return items.map((item) => item.enw_record).join('\n\n');
+    }
+
+    function buildRis(items) {
+      return items.map((item) => item.ris_record).join('\n\n');
+    }
+
+    function buildZoteroRdf(items) {
+      const journals = new Map();
+      const articles = [];
+      for (const item of items) {
+        if (item.zotero_rdf_article) {
+          articles.push(item.zotero_rdf_article);
+        }
+        if (item.journal_resource && item.zotero_rdf_journal && !journals.has(item.journal_resource)) {
+          journals.set(item.journal_resource, item.zotero_rdf_journal);
+        }
+      }
+      const header = [
+        '<rdf:RDF',
+        ' xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"',
+        ' xmlns:z="http://www.zotero.org/namespaces/export#"',
+        ' xmlns:dcterms="http://purl.org/dc/terms/"',
+        ' xmlns:bib="http://purl.org/net/biblio#"',
+        ' xmlns:foaf="http://xmlns.com/foaf/0.1/"',
+        ' xmlns:dc="http://purl.org/dc/elements/1.1/"',
+        ' xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/"',
+        '>',
+      ].join('');
+      return [header, ...articles, ...journals.values(), '</rdf:RDF>'].join('\n');
+    }
+
+    function exportFileName(format, hasSelection) {
+      const base = hasSelection ? 'selected-references' : 'all-references';
+      if (format === 'ris') return `${base}.ris`;
+      if (format === 'zotero-rdf') return `${base}.rdf`;
+      return `${base}.enw`;
+    }
+
+    function updateDownloadLink() {
+      const items = exportItems();
+      const format = downloadFormat.value || 'enw';
+      const hasSelection = selectedItems().length > 0;
+      let content = '';
+      if (format === 'ris') {
+        content = buildRis(items);
+      } else if (format === 'zotero-rdf') {
+        content = buildZoteroRdf(items);
+      } else {
+        content = buildEnw(items);
+      }
+      revokeDownloadUrl();
+      currentDownloadUrl = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }));
+      downloadSelected.href = currentDownloadUrl;
+      downloadSelected.download = exportFileName(format, hasSelection);
+    }
+
+    function updateSelectedPanel() {
+      selectionList.innerHTML = '';
+      const items = selectedItems();
+      selectedCount.textContent = String(items.length);
+      if (!items.length) {
+        selectionEmpty.classList.remove('hidden');
+      } else {
+        selectionEmpty.classList.add('hidden');
+      }
+      for (const item of items) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'selection-item';
+        wrapper.innerHTML = `<h4>${item.title}</h4><p>${item.journal} · ${item.year || 'n.d.'}</p>`;
+        selectionList.appendChild(wrapper);
+      }
+      updateDownloadLink();
+    }
+
+    function yearPass(year) {
+      const fromYear = Number(yearFromInput.value || 0);
+      const toYear = Number(yearToInput.value || 0);
+      const y = Number(year || 0);
+      if (fromYear && (!y || y < fromYear)) return false;
+      if (toYear && (!y || y > toYear)) return false;
+      return true;
+    }
+
+    function queryPass(text) {
+      const needle = queryFilterInput.value.trim().toLowerCase();
+      if (!needle) return true;
+      return text.toLowerCase().includes(needle);
+    }
+
+    function applyFilters() {
+      let totalVisible = 0;
+      document.querySelectorAll('.segment-card').forEach((card) => {
+        let visibleRefs = 0;
+        card.querySelectorAll('.reference').forEach((ref) => {
+          const title = ref.dataset.title || '';
+          const journal = ref.dataset.journal || '';
+          const doi = ref.dataset.doi || '';
+          const authors = ref.dataset.authors || '';
+          const segmentText = ref.dataset.segment || '';
+          const year = ref.dataset.year || '';
+          const key = ref.dataset.key || '';
+          const searchText = `${title} ${journal} ${doi} ${authors} ${segmentText}`;
+          const matches = yearPass(year) && queryPass(searchText) && (!selectedOnlyInput.checked || selectedMap.has(key));
+          ref.classList.toggle('hidden', !matches);
+          if (matches) visibleRefs += 1;
+        });
+        const noRefsMessage = card.querySelector('.empty');
+        if (noRefsMessage) {
+          const matches = !selectedOnlyInput.checked && queryPass(card.dataset.segment || '');
+          noRefsMessage.classList.toggle('hidden', !matches);
+          card.classList.toggle('hidden', !matches);
+          if (matches) totalVisible += 1;
+          return;
+        }
+        card.classList.toggle('hidden', visibleRefs === 0);
+        totalVisible += visibleRefs;
+      });
+      visibleCount.textContent = String(totalVisible);
+    }
+
+    document.querySelectorAll('.reference').forEach((ref) => {
+      const checkbox = ref.querySelector('input[type="checkbox"]');
+      checkbox.addEventListener('change', () => {
+        const key = ref.dataset.key;
+        const record = JSON.parse(ref.dataset.record);
+        if (checkbox.checked) {
+          selectedMap.set(key, record);
+        } else {
+          selectedMap.delete(key);
+        }
+        updateSelectedPanel();
+        applyFilters();
+      });
+    });
+
+    applyFiltersButton.addEventListener('click', applyFilters);
+    downloadFormat.addEventListener('change', updateDownloadLink);
+    clearFiltersButton.addEventListener('click', () => {
+      yearFromInput.value = '';
+      yearToInput.value = '';
+      queryFilterInput.value = '';
+      selectedOnlyInput.checked = false;
+      applyFilters();
+    });
+    queryFilterInput.addEventListener('input', applyFilters);
+    selectedOnlyInput.addEventListener('change', applyFilters);
+    yearFromInput.addEventListener('change', applyFilters);
+    yearToInput.addEventListener('change', applyFilters);
+    updateSelectedPanel();
+    applyFilters();
+  </script>
+</body>
+</html>

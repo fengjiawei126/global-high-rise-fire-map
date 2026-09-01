@@ -1,0 +1,5 @@
+Climate warming alters urban fire activity worldwide, including building fires.
+Short-lived extreme heat may influence building-fire occurrence, but a global event-day analysis using same-location matched control days remains an unresolved design gap.
+Global event databases can have geographically structured ascertainment and missingness, so raw documented-record counts need not represent population incidence.
+Population and built form shape urban fire exposure, but static spatial layers cannot identify an acute within-location weather association.
+Fire-service capacity and resource allocation are relevant to urban fire consequences, while cross-national resource statistics can differ in reference year and reporting system.

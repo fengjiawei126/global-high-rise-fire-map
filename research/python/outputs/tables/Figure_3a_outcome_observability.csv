@@ -1,0 +1,10 @@
+﻿outcome,state,n_events
+Deaths,Missing,5
+Deaths,Reported zero,142
+Deaths,Reported positive,92
+Injuries,Missing,75
+Injuries,Reported zero,63
+Injuries,Reported positive,101
+Evacuated,Missing,196
+Evacuated,Reported zero,2
+Evacuated,Reported positive,41

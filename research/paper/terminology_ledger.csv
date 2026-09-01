@@ -1,0 +1,13 @@
+concept,canonical_term,avoid_or_qualify,reason
+event population,documented high-rise building fire events,global fire incidence,The catalogue has no complete worldwide reporting denominator
+primary outcome,documented event day,fire occurrence without qualifier,The case-crossover outcome is membership in the documented event set
+primary exposure,locally extreme heatwave indicator,heatwave score,Inference uses a binary sequence indicator rather than the map score
+heatwave threshold,"max(local 1991–2020 same-month P90, 30 °C)",universal heatwave temperature,The threshold combines relative and absolute thermal load
+map score,7-day heat-exceedance score,heatwave probability or percentile,The 0–100 value is a truncated descriptive degree-day transform
+temperature field,daily maximum 2-m air temperature,building temperature,ERA5-Land is regional reanalysis rather than building-scale measurement
+population field,population count per native approximately 1-km GPW cell,exact 1-km square population,Native 30 arc-second cell area varies with latitude
+built form,approximately 1-km neighbourhood built-form context,incident-building geometry,GHSL measures surrounding gridded context
+effect estimate,conditional odds ratio,causal risk ratio,The matched observational design estimates an association
+records over time,recording intensity,annual incidence,Search and documentation effort changed over time
+severity,reported casualty count,true event severity,Injury and evacuation reporting are incomplete
+claim status,completed estimate with uncertainty,causal null or positive-effect claim,Authenticated GEE analyses are complete but wide intervals and product disagreement constrain interpretation

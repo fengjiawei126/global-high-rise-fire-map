@@ -1,0 +1,7 @@
+﻿definition,definition_label,event_day_percent,control_day_percent_equal_stratum_weight,n_informative_strata
+heatwave_indicator,"P90, 3 days + floor",2.1929824561403506,2.046783625730994,17
+hw_p85_3d,"P85, 3 days + floor",3.070175438596491,2.923976608187134,25
+hw_p90_2d,"P90, 2 days + floor",3.508771929824561,2.9970760233918123,26
+hw_p90_4d,"P90, 4 days + floor",1.7543859649122806,1.3888888888888886,12
+hw_p95_3d,"P95, 3 days + floor",0.8771929824561403,0.6944444444444444,7
+hw_p90_3d_no_floor,"P90, 3 days, no floor",5.701754385964912,4.89766081871345,43

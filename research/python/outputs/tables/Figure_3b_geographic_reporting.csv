@@ -1,0 +1,19 @@
+﻿continent,outcome,n_events,n_numeric,percent_numeric
+Africa,Deaths,13,12,92.3076923076923
+Africa,Injuries,13,9,69.23076923076923
+Africa,Evacuated,13,2,15.384615384615385
+Asia,Deaths,94,92,97.87234042553192
+Asia,Injuries,94,59,62.76595744680851
+Asia,Evacuated,94,12,12.76595744680851
+Europe,Deaths,63,63,100.0
+Europe,Injuries,63,41,65.07936507936508
+Europe,Evacuated,63,13,20.634920634920633
+North America,Deaths,46,45,97.82608695652173
+North America,Injuries,46,35,76.08695652173914
+North America,Evacuated,46,4,8.695652173913043
+Oceania,Deaths,14,13,92.85714285714286
+Oceania,Injuries,14,12,85.71428571428571
+Oceania,Evacuated,14,8,57.14285714285714
+South America,Deaths,9,9,100.0
+South America,Injuries,9,8,88.88888888888889
+South America,Evacuated,9,4,44.44444444444444

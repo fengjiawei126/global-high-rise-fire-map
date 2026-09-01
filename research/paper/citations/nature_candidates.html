@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nature Citation Browser</title>
+  <style>
+    :root {
+      --ink: #1f1f1f;
+      --muted: #5f6368;
+      --paper: #f8f9fa;
+      --panel: #ffffff;
+      --line: #dadce0;
+      --accent: #1a73e8;
+      --accent-2: #d93025;
+      --soft: #e8f0fe;
+      --soft-2: #f1f3f4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      padding: 26px clamp(16px, 4vw, 40px) 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+    .subhead {
+      max-width: 980px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+      padding: 16px clamp(16px, 4vw, 40px);
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 8;
+    }
+    .toolbar a, .toolbar button, .toolbar input, .toolbar select {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 20px;
+      padding: 10px 14px;
+      font: 500 14px Arial, Helvetica, sans-serif;
+      text-decoration: none;
+    }
+    .toolbar button, .toolbar a {
+      cursor: pointer;
+    }
+    .toolbar button.primary, .toolbar a.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .filters {
+      display: grid;
+      gap: 10px;
+    }
+    .filter-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-input {
+      width: 100%;
+    }
+    .summary-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 12px;
+      background: var(--soft-2);
+      font-size: 13px;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      padding: 22px clamp(16px, 4vw, 40px) 48px;
+    }
+    main {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+    aside {
+      position: sticky;
+      top: 124px;
+      align-self: start;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(60, 64, 67, 0.12);
+    }
+    .segment-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 4px rgba(60, 64, 67, 0.12);
+    }
+    .segment-head {
+      display: flex;
+      gap: 12px;
+      align-items: start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .segment-id {
+      background: var(--soft);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .query {
+      color: var(--muted);
+      font-size: 12px;
+      max-width: 780px;
+    }
+    .segment-text {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+    .insert-row {
+      display: grid;
+      gap: 6px;
+      margin: 12px 0 16px;
+      padding: 12px;
+      background: var(--soft);
+      border-radius: 10px;
+    }
+    .insert-row span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    code {
+      white-space: normal;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+    }
+    .references-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .reference {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: #fff;
+    }
+    .ref-topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .marker {
+      color: var(--accent);
+      font-weight: 800;
+    }
+    .grade {
+      color: var(--accent-2);
+      font-weight: 800;
+    }
+    .ref-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .check-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+      line-height: 1.35;
+      font-weight: 500;
+    }
+    .meta, .authors, .empty {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .reference a {
+      color: var(--accent);
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .abstract {
+      margin: 8px 0 0;
+      color: #3c4043;
+      font-size: 14px;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      background: rgba(20, 33, 31, 0.42);
+      backdrop-filter: blur(3px);
+      z-index: 20;
+    }
+    .modal-overlay.is-hidden {
+      display: none;
+    }
+    .modal-panel {
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      width: min(680px, calc(100vw - 28px));
+      box-shadow: 0 16px 40px rgba(60, 64, 67, 0.28);
+      background: var(--panel);
+      color: var(--ink);
+    }
+    .modal-inner {
+      padding: 24px;
+    }
+    .modal-inner h2 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      background: var(--soft-2);
+    }
+    .stat b {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+    }
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .modal-actions a, .modal-actions button {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fffdf8;
+      border-radius: 20px;
+      padding: 10px 12px;
+      font: 700 14px Arial, Helvetica, sans-serif;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .modal-actions button {
+      background: var(--panel);
+      color: var(--accent);
+    }
+    .selection-title {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .selection-meta {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .selection-list {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+      max-height: 48vh;
+      overflow: auto;
+    }
+    .selection-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--soft-2);
+    }
+    .selection-item h4 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .selection-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .empty-state {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      background: var(--soft-2);
+    }
+    @media (max-width: 680px) {
+      .stats { grid-template-columns: 1fr; }
+      .segment-head { align-items: flex-start; }
+    }
+    @media (max-width: 1040px) {
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+      .summary-strip {
+        justify-content: flex-start;
+      }
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      aside {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Nature Citation Browser</h1>
+    <p class="subhead">Scholar-style browsing for strict Nature/CNS-family candidates. Filter by year, compare related hits, choose the references you actually want, then download them as ENW, RIS, or Zotero RDF.</p>
+  </header>
+  <nav class="toolbar">
+    <div class="filters">
+      <input id="queryFilter" class="search-input" type="text" placeholder="Filter by title, journal, DOI, author, or segment text">
+      <div class="filter-group">
+        <label for="yearFrom">From year</label>
+        <input id="yearFrom" type="number" min="1900" max="2100" placeholder="2019">
+        <label for="yearTo">To year</label>
+        <input id="yearTo" type="number" min="1900" max="2100" placeholder="2026">
+        <button id="applyFilters" type="button">Apply filters</button>
+        <button id="clearFilters" type="button">Clear</button>
+      </div>
+      <div class="filter-group">
+        <label class="check-row"><input id="selectedOnly" type="checkbox"> Show selected only</label>
+      </div>
+    </div>
+    <div class="summary-strip">
+      <span class="pill"><strong id="visibleCount">0</strong> visible</span>
+      <span class="pill"><strong id="selectedCount">0</strong> selected</span>
+      <span class="pill"><strong>7</strong> segments</span>
+    </div>
+    <div class="summary-strip">
+      <button id="openSummary" type="button">Guide</button>
+      <label for="downloadFormat">Format</label>
+      <select id="downloadFormat">
+        <option value="enw">ENW</option>
+        <option value="ris">RIS</option>
+        <option value="zotero-rdf">Zotero RDF</option>
+      </select>
+      <a class="primary" id="downloadSelected" href="nature_candidates.ris" download="nature_candidates.ris">Download selected / all</a>
+    </div>
+  </nav>
+  <div class="layout">
+    <main id="results">
+      
+            <section class="segment-card" id="S001">
+              <div class="segment-head">
+                <span class="segment-id">S001 · Sentence 1</span>
+                <span class="query">Query: Climate warming can alter urban fire activity including building fires but responses differ among fire categories and climate regimes</span>
+              </div>
+              <p class="segment-text">Climate warming can alter urban fire activity, including building fires, but responses differ among fire categories and climate regimes.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Turco et al., 2018)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41467-018-06358-z"
+                      data-title="Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models"
+                      data-journal="Nature Communications"
+                      data-doi="10.1038/s41467-018-06358-z"
+                      data-year="2018"
+                      data-authors="Turco, Marco; Rosa-Cánovas, Juan José; Bedia, Joaquín; Jerez, Sonia; Montávez, Juan Pedro; Llasat, Maria Carmen; Provenzale, Antonello"
+                      data-segment="Climate warming can alter urban fire activity, including building fires, but responses differ among fire categories and climate regimes."
+                      data-record="{&quot;title&quot;: &quot;Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models&quot;, &quot;journal&quot;: &quot;Nature Communications&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2018&quot;, &quot;doi&quot;: &quot;10.1038/s41467-018-06358-z&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41467-018-06358-z&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41467-018-06358-z&quot;, &quot;volume&quot;: &quot;9&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;3821&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2041-1723&quot;, &quot;authors&quot;: [&quot;Turco, Marco&quot;, &quot;Rosa-Cánovas, Juan José&quot;, &quot;Bedia, Joaquín&quot;, &quot;Jerez, Sonia&quot;, &quot;Montávez, Juan Pedro&quot;, &quot;Llasat, Maria Carmen&quot;, &quot;Provenzale, Antonello&quot;], &quot;abstract&quot;: &quot;Abstract The observed trend towards warmer and drier conditions in southern Europe is projected to continue in the next decades, possibly leading to increased risk of large fires. However, an assessment of climate change impacts on fires at and above the 1.5 °C Paris target is still missing. Here, we estimate future summer burned area in Mediterranean Europe under 1.5, 2, and 3 °C global warming scenarios, accounting for possible modifications of climate-fire relationships under changed climatic conditions owing to productivity alterations. We found that such modifications could be beneficial, roughly halving the fire-intensifying signals. In any case, the burned area is robustly projected to increase. The higher the warming level is, the larger is the increase of burned area, ranging from ~40% to ~100% across the scenarios. Our results indicate that significant benefits would be obtained if warming were limited to well below 2 °C.&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 37.91154, &quot;source_query&quot;: &quot;Climate warming can alter urban fire activity including building fires but responses differ among fire categories and climate regimes&quot;, &quot;citation_marker&quot;: &quot;(Turco et al., 2018)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\n%A Turco, Marco\n%A Rosa-Cánovas, Juan José\n%A Bedia, Joaquín\n%A Jerez, Sonia\n%A Montávez, Juan Pedro\n%A Llasat, Maria Carmen\n%A Provenzale, Antonello\n%J Nature Communications\n%V 9\n%N 1\n%P 3821\n%D 2018\n%@ 2041-1723\n%R 10.1038/s41467-018-06358-z\n%U https://doi.org/10.1038/s41467-018-06358-z&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\nAU  - Turco, Marco\nAU  - Rosa-Cánovas, Juan José\nAU  - Bedia, Joaquín\nAU  - Jerez, Sonia\nAU  - Montávez, Juan Pedro\nAU  - Llasat, Maria Carmen\nAU  - Provenzale, Antonello\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2018\nY1  - 2018/10/02\nVL  - 9\nIS  - 1\nSP  - 3821\nDO  - 10.1038/s41467-018-06358-z\nUR  - https://doi.org/10.1038/s41467-018-06358-z\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2041-1723:vol:9:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41467-018-06358-z\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2041-1723:vol:9:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Turco&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Marco&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Rosa-Cánovas&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Juan José&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Bedia&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Joaquín&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Jerez&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Sonia&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Montávez&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Juan Pedro&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Llasat&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Maria Carmen&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Provenzale&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Antonello&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models&lt;/dc:title&gt;\n        &lt;dc:date&gt;2018-10-02&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41467-018-06358-z&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41467-018-06358-z&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;3821&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;turcoExacerbatedFiresIn2018&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2041-1723:vol:9:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;9&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Nature Communications&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2041-1723&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Turco et al., 2018)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 1</span>
+                      </div>
+                      <h3>Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models</h3>
+                      <p class="meta">Nature Communications · Nature Portfolio · 2018</p>
+                      <p class="authors">Turco, Marco; Rosa-Cánovas, Juan José; Bedia, Joaquín; Jerez, Sonia; Montávez, Juan Pedro; Llasat, Maria Carmen</p>
+                      <p class="abstract">Abstract The observed trend towards warmer and drier conditions in southern Europe is projected to continue in the next decades, possibly leading to increased risk of large fires. However, an assessment of climate change impacts on fires at and above the 1.5 °C Paris target is still missing. Here, we estimate future summer burned area in Mediterranean Europe under 1.5, 2, and 3...</p>
+                      <a href="https://doi.org/10.1038/s41467-018-06358-z" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41467-018-06358-z</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S002">
+              <div class="segment-head">
+                <span class="segment-id">S002 · Sentence 2</span>
+                <span class="query">Query: High-rise buildings concentrate occupants vertically and create distinctive evacuation smoke-spread fa ade-spread and fire-service access challenges</span>
+              </div>
+              <p class="segment-text">High-rise buildings concentrate occupants vertically and create distinctive evacuation, smoke-spread, façade-spread and fire-service access challenges.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>No candidate</code>
+              </div>
+              <div class="references-grid">
+                <p class="empty">No in-scope candidate was found for this segment.</p>
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S003">
+              <div class="segment-head">
+                <span class="segment-id">S003 · Sentence 3</span>
+                <span class="query">Query: Heat exposure can influence electricity demand equipment failure human behaviour or emergency-response load in cities providing plausible pathways for an association with building-fire risk</span>
+              </div>
+              <p class="segment-text">Heat exposure can influence electricity demand, equipment failure, human behaviour or emergency-response load in cities, providing plausible pathways for an association with building-fire risk.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Chen et al., 2024)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41598-024-72397-w"
+                      data-title="Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response"
+                      data-journal="Scientific Reports"
+                      data-doi="10.1038/s41598-024-72397-w"
+                      data-year="2024"
+                      data-authors="Chen, Shijia; Ye, Ze; Meng, Yichao"
+                      data-segment="Heat exposure can influence electricity demand, equipment failure, human behaviour or emergency-response load in cities, providing plausible pathways for an association with building-fire risk."
+                      data-record="{&quot;title&quot;: &quot;Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response&quot;, &quot;journal&quot;: &quot;Scientific Reports&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2024&quot;, &quot;doi&quot;: &quot;10.1038/s41598-024-72397-w&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41598-024-72397-w&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41598-024-72397-w&quot;, &quot;volume&quot;: &quot;14&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;21368&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2045-2322&quot;, &quot;authors&quot;: [&quot;Chen, Shijia&quot;, &quot;Ye, Ze&quot;, &quot;Meng, Yichao&quot;], &quot;abstract&quot;: &quot;&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 24.813557, &quot;source_query&quot;: &quot;Heat exposure influence electricity demand equipment failure human behaviour emergency-response load cities&quot;, &quot;citation_marker&quot;: &quot;(Chen et al., 2024)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response\n%A Chen, Shijia\n%A Ye, Ze\n%A Meng, Yichao\n%J Scientific Reports\n%V 14\n%N 1\n%P 21368\n%D 2024\n%@ 2045-2322\n%R 10.1038/s41598-024-72397-w\n%U https://doi.org/10.1038/s41598-024-72397-w&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response\nAU  - Chen, Shijia\nAU  - Ye, Ze\nAU  - Meng, Yichao\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2024\nY1  - 2024/09/12\nVL  - 14\nIS  - 1\nSP  - 21368\nDO  - 10.1038/s41598-024-72397-w\nUR  - https://doi.org/10.1038/s41598-024-72397-w\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2045-2322:vol:14:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41598-024-72397-w\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2045-2322:vol:14:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Chen&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Shijia&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Ye&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Ze&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Meng&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Yichao&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response&lt;/dc:title&gt;\n        &lt;dc:date&gt;2024-09-12&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41598-024-72397-w&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41598-024-72397-w&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;21368&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;chenOptimizationClearingStrategy2024&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2045-2322:vol:14:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;14&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Scientific Reports&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2045-2322&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Chen et al., 2024)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 1</span>
+                      </div>
+                      <h3>Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response</h3>
+                      <p class="meta">Scientific Reports · Nature Portfolio · 2024</p>
+                      <p class="authors">Chen, Shijia; Ye, Ze; Meng, Yichao</p>
+                      <p class="abstract">No abstract snippet available from Crossref metadata.</p>
+                      <a href="https://doi.org/10.1038/s41598-024-72397-w" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41598-024-72397-w</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S004">
+              <div class="segment-head">
+                <span class="segment-id">S004 · Sentence 4</span>
+                <span class="query">Query: Urban population density and built form shape the exposure and potential consequences of building fires but should not be treated as short-term ignition mechanisms</span>
+              </div>
+              <p class="segment-text">Urban population density and built form shape the exposure and potential consequences of building fires but should not be treated as short-term ignition mechanisms.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Huang et al., 2025)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41598-025-96045-z"
+                      data-title="Declining urban density attenuates rising population exposure to surface heat extremes"
+                      data-journal="Scientific Reports"
+                      data-doi="10.1038/s41598-025-96045-z"
+                      data-year="2025"
+                      data-authors="Huang, Kangning; Stone, Brian; Guan, ChengHe; Liang, Jiayong"
+                      data-segment="Urban population density and built form shape the exposure and potential consequences of building fires but should not be treated as short-term ignition mechanisms."
+                      data-record="{&quot;title&quot;: &quot;Declining urban density attenuates rising population exposure to surface heat extremes&quot;, &quot;journal&quot;: &quot;Scientific Reports&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2025&quot;, &quot;doi&quot;: &quot;10.1038/s41598-025-96045-z&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41598-025-96045-z&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41598-025-96045-z&quot;, &quot;volume&quot;: &quot;15&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;13860&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2045-2322&quot;, &quot;authors&quot;: [&quot;Huang, Kangning&quot;, &quot;Stone, Brian&quot;, &quot;Guan, ChengHe&quot;, &quot;Liang, Jiayong&quot;], &quot;abstract&quot;: &quot;&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 24.40488, &quot;source_query&quot;: &quot;Urban population density and built form shape the exposure and potential consequences of building fires but should not be treated as short-term ignition mechanisms&quot;, &quot;citation_marker&quot;: &quot;(Huang et al., 2025)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Declining urban density attenuates rising population exposure to surface heat extremes\n%A Huang, Kangning\n%A Stone, Brian\n%A Guan, ChengHe\n%A Liang, Jiayong\n%J Scientific Reports\n%V 15\n%N 1\n%P 13860\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-96045-z\n%U https://doi.org/10.1038/s41598-025-96045-z&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Declining urban density attenuates rising population exposure to surface heat extremes\nAU  - Huang, Kangning\nAU  - Stone, Brian\nAU  - Guan, ChengHe\nAU  - Liang, Jiayong\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/04/22\nVL  - 15\nIS  - 1\nSP  - 13860\nDO  - 10.1038/s41598-025-96045-z\nUR  - https://doi.org/10.1038/s41598-025-96045-z\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2045-2322:vol:15:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41598-025-96045-z\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2045-2322:vol:15:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Huang&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Kangning&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Stone&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Brian&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Guan&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;ChengHe&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Liang&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Jiayong&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Declining urban density attenuates rising population exposure to surface heat extremes&lt;/dc:title&gt;\n        &lt;dc:date&gt;2025-04-22&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41598-025-96045-z&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41598-025-96045-z&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;13860&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;huangDecliningUrbanDensity2025&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2045-2322:vol:15:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;15&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Scientific Reports&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2045-2322&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Huang et al., 2025)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 1</span>
+                      </div>
+                      <h3>Declining urban density attenuates rising population exposure to surface heat extremes</h3>
+                      <p class="meta">Scientific Reports · Nature Portfolio · 2025</p>
+                      <p class="authors">Huang, Kangning; Stone, Brian; Guan, ChengHe; Liang, Jiayong</p>
+                      <p class="abstract">No abstract snippet available from Crossref metadata.</p>
+                      <a href="https://doi.org/10.1038/s41598-025-96045-z" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41598-025-96045-z</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S005">
+              <div class="segment-head">
+                <span class="segment-id">S005 · Sentence 5</span>
+                <span class="query">Query: Time-stratified case-crossover designs control location-stable confounding and calendar structure when estimating associations between transient environmental exposures and acute events</span>
+              </div>
+              <p class="segment-text">Time-stratified case-crossover designs control location-stable confounding and calendar structure when estimating associations between transient environmental exposures and acute events.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>No candidate</code>
+              </div>
+              <div class="references-grid">
+                <p class="empty">No in-scope candidate was found for this segment.</p>
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S006">
+              <div class="segment-head">
+                <span class="segment-id">S006 · Sentence 6</span>
+                <span class="query">Query: Global gridded population reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events</span>
+              </div>
+              <p class="segment-text">Global gridded population, reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>(Láng-Ritter et al., 2025) (Zandler et al., 2020)</code>
+              </div>
+              <div class="references-grid">
+                
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41467-025-56906-7"
+                      data-title="Global gridded population datasets systematically underrepresent rural population"
+                      data-journal="Nature Communications"
+                      data-doi="10.1038/s41467-025-56906-7"
+                      data-year="2025"
+                      data-authors="Láng-Ritter, Josias; Keskinen, Marko; Tenkanen, Henrikki"
+                      data-segment="Global gridded population, reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events."
+                      data-record="{&quot;title&quot;: &quot;Global gridded population datasets systematically underrepresent rural population&quot;, &quot;journal&quot;: &quot;Nature Communications&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2025&quot;, &quot;doi&quot;: &quot;10.1038/s41467-025-56906-7&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41467-025-56906-7&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41467-025-56906-7&quot;, &quot;volume&quot;: &quot;16&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;2170&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2041-1723&quot;, &quot;authors&quot;: [&quot;Láng-Ritter, Josias&quot;, &quot;Keskinen, Marko&quot;, &quot;Tenkanen, Henrikki&quot;], &quot;abstract&quot;: &quot;Abstract Numerous initiatives towards sustainable development rely on global gridded population data. Such data have been calibrated primarily for urban environments, but their accuracy in the rural domain remains largely unexplored. This study systematically validates global gridded population datasets in rural areas, based on reported human resettlement from 307 large dam construction projects in 35 countries. We find large discrepancies between the examined datasets, and, without exception, significant negative biases of −53%, −65%, −67%, −68%, and −84% for WorldPop, GWP, GRUMP, LandScan, and GHS-POP, respectively. This implies that rural population is, even in the most accurate dataset, underestimated by half compared to reported figures. To ensure equitable access to services and resources for rural communities, past and future applications of the datasets must undergo a critical discussion in light of the identified biases. Improvements in the datasets’ accuracies in rural areas can be attained through strengthened population censuses, alternative population counts, and a more balanced calibration of population models.&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 31.814636, &quot;source_query&quot;: &quot;Global gridded population reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events&quot;, &quot;citation_marker&quot;: &quot;(Láng-Ritter et al., 2025)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Global gridded population datasets systematically underrepresent rural population\n%A Láng-Ritter, Josias\n%A Keskinen, Marko\n%A Tenkanen, Henrikki\n%J Nature Communications\n%V 16\n%N 1\n%P 2170\n%D 2025\n%@ 2041-1723\n%R 10.1038/s41467-025-56906-7\n%U https://doi.org/10.1038/s41467-025-56906-7&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Global gridded population datasets systematically underrepresent rural population\nAU  - Láng-Ritter, Josias\nAU  - Keskinen, Marko\nAU  - Tenkanen, Henrikki\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2025\nY1  - 2025/03/18\nVL  - 16\nIS  - 1\nSP  - 2170\nDO  - 10.1038/s41467-025-56906-7\nUR  - https://doi.org/10.1038/s41467-025-56906-7\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2041-1723:vol:16:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41467-025-56906-7\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2041-1723:vol:16:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Láng-Ritter&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Josias&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Keskinen&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Marko&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Tenkanen&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Henrikki&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Global gridded population datasets systematically underrepresent rural population&lt;/dc:title&gt;\n        &lt;dc:date&gt;2025-03-18&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41467-025-56906-7&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41467-025-56906-7&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;2170&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;l-ng-ritterGlobalGriddedPopulation2025&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2041-1723:vol:16:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;16&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Nature Communications&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2041-1723&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Láng-Ritter et al., 2025)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>1 / 2</span>
+                      </div>
+                      <h3>Global gridded population datasets systematically underrepresent rural population</h3>
+                      <p class="meta">Nature Communications · Nature Portfolio · 2025</p>
+                      <p class="authors">Láng-Ritter, Josias; Keskinen, Marko; Tenkanen, Henrikki</p>
+                      <p class="abstract">Abstract Numerous initiatives towards sustainable development rely on global gridded population data. Such data have been calibrated primarily for urban environments, but their accuracy in the rural domain remains largely unexplored. This study systematically validates global gridded population datasets in rural areas, based on reported human resettlement from 307 large dam con...</p>
+                      <a href="https://doi.org/10.1038/s41467-025-56906-7" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41467-025-56906-7</a>
+                    </article>
+                    
+                    <article
+                      class="reference"
+                      data-key="10.1038/s41598-020-79480-y"
+                      data-title="Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia"
+                      data-journal="Scientific Reports"
+                      data-doi="10.1038/s41598-020-79480-y"
+                      data-year="2020"
+                      data-authors="Zandler, Harald; Senftl, Thomas; Vanselow, Kim André"
+                      data-segment="Global gridded population, reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events."
+                      data-record="{&quot;title&quot;: &quot;Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia&quot;, &quot;journal&quot;: &quot;Scientific Reports&quot;, &quot;family&quot;: &quot;Nature Portfolio&quot;, &quot;year&quot;: &quot;2020&quot;, &quot;doi&quot;: &quot;10.1038/s41598-020-79480-y&quot;, &quot;url&quot;: &quot;https://doi.org/10.1038/s41598-020-79480-y&quot;, &quot;doi_url&quot;: &quot;https://doi.org/10.1038/s41598-020-79480-y&quot;, &quot;volume&quot;: &quot;10&quot;, &quot;issue&quot;: &quot;1&quot;, &quot;start_page&quot;: &quot;22446&quot;, &quot;end_page&quot;: &quot;&quot;, &quot;issn&quot;: &quot;2045-2322&quot;, &quot;authors&quot;: [&quot;Zandler, Harald&quot;, &quot;Senftl, Thomas&quot;, &quot;Vanselow, Kim André&quot;], &quot;abstract&quot;: &quot;Abstract Global environmental research requires long-term climate data. Yet, meteorological infrastructure is missing in the vast majority of the world’s protected areas. Therefore, gridded products are frequently used as the only available climate data source in peripheral regions. However, associated evaluations are commonly biased towards well observed areas and consequently, station-based datasets. As evaluations on vegetation monitoring abilities are lacking for regions with poor data availability, we analyzed the potential of several state-of-the-art climate datasets (CHIRPS, CRU, ERA5-Land, GPCC-Monitoring-Product, IMERG-GPM, MERRA-2, MODIS-MOD10A1) for assessing NDVI anomalies (MODIS-MOD13Q1) in two particularly suitable remote conservation areas. We calculated anomalies of 156 climate variables and seasonal periods during 2001–2018, correlated these with vegetation anomalies while taking the multiple comparison problem into consideration, and computed their spatial performance to derive suitable parameters. Our results showed that four datasets (MERRA-2, ERA5-Land, MOD10A1, CRU) were suitable for vegetation analysis in both regions, by showing significant correlations controlled at a false discovery rate &amp;lt; 5% and in more than half of the analyzed areas. Cross-validated variable selection and importance assessment based on the Boruta algorithm indicated high importance of the reanalysis datasets ERA5-Land and MERRA-2 in both areas but higher differences and variability between the regions with all other products. CHIRPS, GPCC and the bias-corrected version of MERRA-2 were unsuitable and not important in both regions. We provide evidence that reanalysis datasets are most suitable for spatiotemporally consistent environmental analysis whereas gauge- or satellite-based products and their combinations are highly variable and may not be applicable in peripheral areas.&quot;, &quot;type&quot;: &quot;journal-article&quot;, &quot;score&quot;: 25.737984, &quot;source_query&quot;: &quot;Global gridded population reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events&quot;, &quot;citation_marker&quot;: &quot;(Zandler et al., 2020)&quot;, &quot;support_grade&quot;: &quot;metadata-only candidate&quot;, &quot;screening_note&quot;: &quot;Inspect abstract/publisher page before citing this paper as support.&quot;, &quot;enw_record&quot;: &quot;%0 Journal Article\n%T Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia\n%A Zandler, Harald\n%A Senftl, Thomas\n%A Vanselow, Kim André\n%J Scientific Reports\n%V 10\n%N 1\n%P 22446\n%D 2020\n%@ 2045-2322\n%R 10.1038/s41598-020-79480-y\n%U https://doi.org/10.1038/s41598-020-79480-y&quot;, &quot;ris_record&quot;: &quot;TY  - JOUR\nTI  - Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia\nAU  - Zandler, Harald\nAU  - Senftl, Thomas\nAU  - Vanselow, Kim André\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2020\nY1  - 2020/12/31\nVL  - 10\nIS  - 1\nSP  - 22446\nDO  - 10.1038/s41598-020-79480-y\nUR  - https://doi.org/10.1038/s41598-020-79480-y\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -&quot;, &quot;journal_resource&quot;: &quot;urn:issn:2045-2322:vol:10:issue:1&quot;, &quot;zotero_rdf_article&quot;: &quot;    &lt;bib:Article rdf:about=\&quot;https://doi.org/10.1038/s41598-020-79480-y\&quot;&gt;\n        &lt;z:itemType&gt;journalArticle&lt;/z:itemType&gt;\n        &lt;dcterms:isPartOf rdf:resource=\&quot;urn:issn:2045-2322:vol:10:issue:1\&quot;/&gt;\n        &lt;bib:authors&gt;\n            &lt;rdf:Seq&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Zandler&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Harald&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Senftl&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Thomas&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n                &lt;rdf:li&gt;\n                    &lt;foaf:Person&gt;\n                        &lt;foaf:surname&gt;Vanselow&lt;/foaf:surname&gt;\n                        &lt;foaf:givenName&gt;Kim André&lt;/foaf:givenName&gt;\n                    &lt;/foaf:Person&gt;\n                &lt;/rdf:li&gt;\n            &lt;/rdf:Seq&gt;\n        &lt;/bib:authors&gt;\n        &lt;dc:title&gt;Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia&lt;/dc:title&gt;\n        &lt;dc:date&gt;2020-12-31&lt;/dc:date&gt;\n        &lt;z:libraryCatalog&gt;Crossref&lt;/z:libraryCatalog&gt;\n        &lt;dc:identifier&gt;\n            &lt;dcterms:URI&gt;\n                &lt;rdf:value&gt;https://doi.org/10.1038/s41598-020-79480-y&lt;/rdf:value&gt;\n            &lt;/dcterms:URI&gt;\n        &lt;/dc:identifier&gt;\n        &lt;dc:identifier&gt;DOI 10.1038/s41598-020-79480-y&lt;/dc:identifier&gt;\n        &lt;bib:pages&gt;22446&lt;/bib:pages&gt;\n        &lt;z:citationKey&gt;zandlerReanalysisDatasetsOutperform2020&lt;/z:citationKey&gt;\n    &lt;/bib:Article&gt;&quot;, &quot;zotero_rdf_journal&quot;: &quot;    &lt;bib:Journal rdf:about=\&quot;urn:issn:2045-2322:vol:10:issue:1\&quot;&gt;\n        &lt;prism:volume&gt;10&lt;/prism:volume&gt;\n        &lt;dc:title&gt;Scientific Reports&lt;/dc:title&gt;\n        &lt;prism:number&gt;1&lt;/prism:number&gt;\n        &lt;dc:identifier&gt;ISSN 2045-2322&lt;/dc:identifier&gt;\n    &lt;/bib:Journal&gt;&quot;}"
+                    >
+                      <div class="ref-controls">
+                        <label class="check-row"><input type="checkbox"> Select</label>
+                        <span class="marker">(Zandler et al., 2020)</span>
+                      </div>
+                      <div class="ref-topline">
+                        <span class="grade">metadata-only</span>
+                        <span>2 / 2</span>
+                      </div>
+                      <h3>Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia</h3>
+                      <p class="meta">Scientific Reports · Nature Portfolio · 2020</p>
+                      <p class="authors">Zandler, Harald; Senftl, Thomas; Vanselow, Kim André</p>
+                      <p class="abstract">Abstract Global environmental research requires long-term climate data. Yet, meteorological infrastructure is missing in the vast majority of the world’s protected areas. Therefore, gridded products are frequently used as the only available climate data source in peripheral regions. However, associated evaluations are commonly biased towards well observed areas and consequently...</p>
+                      <a href="https://doi.org/10.1038/s41598-020-79480-y" target="_blank" rel="noreferrer">https://doi.org/10.1038/s41598-020-79480-y</a>
+                    </article>
+                    
+              </div>
+            </section>
+            
+            <section class="segment-card" id="S007">
+              <div class="segment-head">
+                <span class="segment-id">S007 · Sentence 7</span>
+                <span class="query">Query: Risk-informed fire-protection resource allocation can improve the relationship between prevention investment and human or economic losses</span>
+              </div>
+              <p class="segment-text">Risk-informed fire-protection resource allocation can improve the relationship between prevention investment and human or economic losses.</p>
+              <div class="insert-row">
+                <span>Suggested insert</span>
+                <code>No candidate</code>
+              </div>
+              <div class="references-grid">
+                <p class="empty">No in-scope candidate was found for this segment.</p>
+              </div>
+            </section>
+            
+    </main>
+    <aside>
+      <h2 class="selection-title">Selected references</h2>
+      <p class="selection-meta">Tick the references you want. The download button exports the selection in the chosen format. If nothing is selected, it exports all references.</p>
+      <div id="selectionList" class="selection-list"></div>
+      <div id="selectionEmpty" class="empty-state">No references selected yet.</div>
+    </aside>
+  </div>
+  <div class="modal-overlay" id="summaryModal" aria-hidden="false">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
+      <div class="modal-inner">
+        <h2 id="summaryTitle">Ready to review citations</h2>
+        <p>This page behaves more like a compact Scholar browser: filter by year, browse related results, select the citations you trust, and download them as ENW, RIS, or Zotero RDF.</p>
+        <div class="stats">
+          <div class="stat"><b>7</b><span>segments</span></div>
+          <div class="stat"><b>5</b><span>unique references</span></div>
+        </div>
+        <p class="meta">Important: these are still metadata-level candidates. Selection is your decision, not an automatic validity guarantee.</p>
+        <div class="modal-actions">
+          <a href="nature_candidates.ris" download>Download original RIS file</a>
+          <button id="closeSummary" type="button" onclick="document.getElementById('summaryModal').classList.add('is-hidden'); document.getElementById('summaryModal').setAttribute('aria-hidden', 'true');">Start browsing</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script id="citationData" type="application/json">{"segmentCount": 7, "referenceCount": 5, "defaultExportFormat": "ris", "defaultExportName": "nature_candidates.ris", "references": [{"title": "Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models", "journal": "Nature Communications", "family": "Nature Portfolio", "year": "2018", "doi": "10.1038/s41467-018-06358-z", "url": "https://doi.org/10.1038/s41467-018-06358-z", "doi_url": "https://doi.org/10.1038/s41467-018-06358-z", "volume": "9", "issue": "1", "start_page": "3821", "end_page": "", "issn": "2041-1723", "authors": ["Turco, Marco", "Rosa-Cánovas, Juan José", "Bedia, Joaquín", "Jerez, Sonia", "Montávez, Juan Pedro", "Llasat, Maria Carmen", "Provenzale, Antonello"], "abstract": "Abstract The observed trend towards warmer and drier conditions in southern Europe is projected to continue in the next decades, possibly leading to increased risk of large fires. However, an assessment of climate change impacts on fires at and above the 1.5 °C Paris target is still missing. Here, we estimate future summer burned area in Mediterranean Europe under 1.5, 2, and 3 °C global warming scenarios, accounting for possible modifications of climate-fire relationships under changed climatic conditions owing to productivity alterations. We found that such modifications could be beneficial, roughly halving the fire-intensifying signals. In any case, the burned area is robustly projected to increase. The higher the warming level is, the larger is the increase of burned area, ranging from ~40% to ~100% across the scenarios. Our results indicate that significant benefits would be obtained if warming were limited to well below 2 °C.", "type": "journal-article", "score": 37.91154, "source_query": "Climate warming can alter urban fire activity including building fires but responses differ among fire categories and climate regimes", "citation_marker": "(Turco et al., 2018)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\n%A Turco, Marco\n%A Rosa-Cánovas, Juan José\n%A Bedia, Joaquín\n%A Jerez, Sonia\n%A Montávez, Juan Pedro\n%A Llasat, Maria Carmen\n%A Provenzale, Antonello\n%J Nature Communications\n%V 9\n%N 1\n%P 3821\n%D 2018\n%@ 2041-1723\n%R 10.1038/s41467-018-06358-z\n%U https://doi.org/10.1038/s41467-018-06358-z", "ris_record": "TY  - JOUR\nTI  - Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\nAU  - Turco, Marco\nAU  - Rosa-Cánovas, Juan José\nAU  - Bedia, Joaquín\nAU  - Jerez, Sonia\nAU  - Montávez, Juan Pedro\nAU  - Llasat, Maria Carmen\nAU  - Provenzale, Antonello\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2018\nY1  - 2018/10/02\nVL  - 9\nIS  - 1\nSP  - 3821\nDO  - 10.1038/s41467-018-06358-z\nUR  - https://doi.org/10.1038/s41467-018-06358-z\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2041-1723:vol:9:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41467-018-06358-z\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2041-1723:vol:9:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Turco</foaf:surname>\n                        <foaf:givenName>Marco</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Rosa-Cánovas</foaf:surname>\n                        <foaf:givenName>Juan José</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Bedia</foaf:surname>\n                        <foaf:givenName>Joaquín</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Jerez</foaf:surname>\n                        <foaf:givenName>Sonia</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Montávez</foaf:surname>\n                        <foaf:givenName>Juan Pedro</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Llasat</foaf:surname>\n                        <foaf:givenName>Maria Carmen</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Provenzale</foaf:surname>\n                        <foaf:givenName>Antonello</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models</dc:title>\n        <dc:date>2018-10-02</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41467-018-06358-z</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41467-018-06358-z</dc:identifier>\n        <bib:pages>3821</bib:pages>\n        <z:citationKey>turcoExacerbatedFiresIn2018</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2041-1723:vol:9:issue:1\">\n        <prism:volume>9</prism:volume>\n        <dc:title>Nature Communications</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2041-1723</dc:identifier>\n    </bib:Journal>"}, {"title": "Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2024", "doi": "10.1038/s41598-024-72397-w", "url": "https://doi.org/10.1038/s41598-024-72397-w", "doi_url": "https://doi.org/10.1038/s41598-024-72397-w", "volume": "14", "issue": "1", "start_page": "21368", "end_page": "", "issn": "2045-2322", "authors": ["Chen, Shijia", "Ye, Ze", "Meng, Yichao"], "abstract": "", "type": "journal-article", "score": 24.813557, "source_query": "Heat exposure influence electricity demand equipment failure human behaviour emergency-response load cities", "citation_marker": "(Chen et al., 2024)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response\n%A Chen, Shijia\n%A Ye, Ze\n%A Meng, Yichao\n%J Scientific Reports\n%V 14\n%N 1\n%P 21368\n%D 2024\n%@ 2045-2322\n%R 10.1038/s41598-024-72397-w\n%U https://doi.org/10.1038/s41598-024-72397-w", "ris_record": "TY  - JOUR\nTI  - Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response\nAU  - Chen, Shijia\nAU  - Ye, Ze\nAU  - Meng, Yichao\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2024\nY1  - 2024/09/12\nVL  - 14\nIS  - 1\nSP  - 21368\nDO  - 10.1038/s41598-024-72397-w\nUR  - https://doi.org/10.1038/s41598-024-72397-w\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:14:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-024-72397-w\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:14:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Chen</foaf:surname>\n                        <foaf:givenName>Shijia</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Ye</foaf:surname>\n                        <foaf:givenName>Ze</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Meng</foaf:surname>\n                        <foaf:givenName>Yichao</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response</dc:title>\n        <dc:date>2024-09-12</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-024-72397-w</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-024-72397-w</dc:identifier>\n        <bib:pages>21368</bib:pages>\n        <z:citationKey>chenOptimizationClearingStrategy2024</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:14:issue:1\">\n        <prism:volume>14</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}, {"title": "Declining urban density attenuates rising population exposure to surface heat extremes", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s41598-025-96045-z", "url": "https://doi.org/10.1038/s41598-025-96045-z", "doi_url": "https://doi.org/10.1038/s41598-025-96045-z", "volume": "15", "issue": "1", "start_page": "13860", "end_page": "", "issn": "2045-2322", "authors": ["Huang, Kangning", "Stone, Brian", "Guan, ChengHe", "Liang, Jiayong"], "abstract": "", "type": "journal-article", "score": 24.40488, "source_query": "Urban population density and built form shape the exposure and potential consequences of building fires but should not be treated as short-term ignition mechanisms", "citation_marker": "(Huang et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Declining urban density attenuates rising population exposure to surface heat extremes\n%A Huang, Kangning\n%A Stone, Brian\n%A Guan, ChengHe\n%A Liang, Jiayong\n%J Scientific Reports\n%V 15\n%N 1\n%P 13860\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-96045-z\n%U https://doi.org/10.1038/s41598-025-96045-z", "ris_record": "TY  - JOUR\nTI  - Declining urban density attenuates rising population exposure to surface heat extremes\nAU  - Huang, Kangning\nAU  - Stone, Brian\nAU  - Guan, ChengHe\nAU  - Liang, Jiayong\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/04/22\nVL  - 15\nIS  - 1\nSP  - 13860\nDO  - 10.1038/s41598-025-96045-z\nUR  - https://doi.org/10.1038/s41598-025-96045-z\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:15:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-025-96045-z\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:15:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Huang</foaf:surname>\n                        <foaf:givenName>Kangning</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Stone</foaf:surname>\n                        <foaf:givenName>Brian</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Guan</foaf:surname>\n                        <foaf:givenName>ChengHe</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Liang</foaf:surname>\n                        <foaf:givenName>Jiayong</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Declining urban density attenuates rising population exposure to surface heat extremes</dc:title>\n        <dc:date>2025-04-22</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-025-96045-z</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-025-96045-z</dc:identifier>\n        <bib:pages>13860</bib:pages>\n        <z:citationKey>huangDecliningUrbanDensity2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:15:issue:1\">\n        <prism:volume>15</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}, {"title": "Global gridded population datasets systematically underrepresent rural population", "journal": "Nature Communications", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s41467-025-56906-7", "url": "https://doi.org/10.1038/s41467-025-56906-7", "doi_url": "https://doi.org/10.1038/s41467-025-56906-7", "volume": "16", "issue": "1", "start_page": "2170", "end_page": "", "issn": "2041-1723", "authors": ["Láng-Ritter, Josias", "Keskinen, Marko", "Tenkanen, Henrikki"], "abstract": "Abstract Numerous initiatives towards sustainable development rely on global gridded population data. Such data have been calibrated primarily for urban environments, but their accuracy in the rural domain remains largely unexplored. This study systematically validates global gridded population datasets in rural areas, based on reported human resettlement from 307 large dam construction projects in 35 countries. We find large discrepancies between the examined datasets, and, without exception, significant negative biases of −53%, −65%, −67%, −68%, and −84% for WorldPop, GWP, GRUMP, LandScan, and GHS-POP, respectively. This implies that rural population is, even in the most accurate dataset, underestimated by half compared to reported figures. To ensure equitable access to services and resources for rural communities, past and future applications of the datasets must undergo a critical discussion in light of the identified biases. Improvements in the datasets’ accuracies in rural areas can be attained through strengthened population censuses, alternative population counts, and a more balanced calibration of population models.", "type": "journal-article", "score": 31.814636, "source_query": "Global gridded population reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events", "citation_marker": "(Láng-Ritter et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Global gridded population datasets systematically underrepresent rural population\n%A Láng-Ritter, Josias\n%A Keskinen, Marko\n%A Tenkanen, Henrikki\n%J Nature Communications\n%V 16\n%N 1\n%P 2170\n%D 2025\n%@ 2041-1723\n%R 10.1038/s41467-025-56906-7\n%U https://doi.org/10.1038/s41467-025-56906-7", "ris_record": "TY  - JOUR\nTI  - Global gridded population datasets systematically underrepresent rural population\nAU  - Láng-Ritter, Josias\nAU  - Keskinen, Marko\nAU  - Tenkanen, Henrikki\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2025\nY1  - 2025/03/18\nVL  - 16\nIS  - 1\nSP  - 2170\nDO  - 10.1038/s41467-025-56906-7\nUR  - https://doi.org/10.1038/s41467-025-56906-7\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2041-1723:vol:16:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41467-025-56906-7\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2041-1723:vol:16:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Láng-Ritter</foaf:surname>\n                        <foaf:givenName>Josias</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Keskinen</foaf:surname>\n                        <foaf:givenName>Marko</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Tenkanen</foaf:surname>\n                        <foaf:givenName>Henrikki</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Global gridded population datasets systematically underrepresent rural population</dc:title>\n        <dc:date>2025-03-18</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41467-025-56906-7</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41467-025-56906-7</dc:identifier>\n        <bib:pages>2170</bib:pages>\n        <z:citationKey>l-ng-ritterGlobalGriddedPopulation2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2041-1723:vol:16:issue:1\">\n        <prism:volume>16</prism:volume>\n        <dc:title>Nature Communications</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2041-1723</dc:identifier>\n    </bib:Journal>"}, {"title": "Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2020", "doi": "10.1038/s41598-020-79480-y", "url": "https://doi.org/10.1038/s41598-020-79480-y", "doi_url": "https://doi.org/10.1038/s41598-020-79480-y", "volume": "10", "issue": "1", "start_page": "22446", "end_page": "", "issn": "2045-2322", "authors": ["Zandler, Harald", "Senftl, Thomas", "Vanselow, Kim André"], "abstract": "Abstract Global environmental research requires long-term climate data. Yet, meteorological infrastructure is missing in the vast majority of the world’s protected areas. Therefore, gridded products are frequently used as the only available climate data source in peripheral regions. However, associated evaluations are commonly biased towards well observed areas and consequently, station-based datasets. As evaluations on vegetation monitoring abilities are lacking for regions with poor data availability, we analyzed the potential of several state-of-the-art climate datasets (CHIRPS, CRU, ERA5-Land, GPCC-Monitoring-Product, IMERG-GPM, MERRA-2, MODIS-MOD10A1) for assessing NDVI anomalies (MODIS-MOD13Q1) in two particularly suitable remote conservation areas. We calculated anomalies of 156 climate variables and seasonal periods during 2001–2018, correlated these with vegetation anomalies while taking the multiple comparison problem into consideration, and computed their spatial performance to derive suitable parameters. Our results showed that four datasets (MERRA-2, ERA5-Land, MOD10A1, CRU) were suitable for vegetation analysis in both regions, by showing significant correlations controlled at a false discovery rate &lt; 5% and in more than half of the analyzed areas. Cross-validated variable selection and importance assessment based on the Boruta algorithm indicated high importance of the reanalysis datasets ERA5-Land and MERRA-2 in both areas but higher differences and variability between the regions with all other products. CHIRPS, GPCC and the bias-corrected version of MERRA-2 were unsuitable and not important in both regions. We provide evidence that reanalysis datasets are most suitable for spatiotemporally consistent environmental analysis whereas gauge- or satellite-based products and their combinations are highly variable and may not be applicable in peripheral areas.", "type": "journal-article", "score": 25.737984, "source_query": "Global gridded population reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events", "citation_marker": "(Zandler et al., 2020)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia\n%A Zandler, Harald\n%A Senftl, Thomas\n%A Vanselow, Kim André\n%J Scientific Reports\n%V 10\n%N 1\n%P 22446\n%D 2020\n%@ 2045-2322\n%R 10.1038/s41598-020-79480-y\n%U https://doi.org/10.1038/s41598-020-79480-y", "ris_record": "TY  - JOUR\nTI  - Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia\nAU  - Zandler, Harald\nAU  - Senftl, Thomas\nAU  - Vanselow, Kim André\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2020\nY1  - 2020/12/31\nVL  - 10\nIS  - 1\nSP  - 22446\nDO  - 10.1038/s41598-020-79480-y\nUR  - https://doi.org/10.1038/s41598-020-79480-y\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:10:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-020-79480-y\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:10:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Zandler</foaf:surname>\n                        <foaf:givenName>Harald</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Senftl</foaf:surname>\n                        <foaf:givenName>Thomas</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Vanselow</foaf:surname>\n                        <foaf:givenName>Kim André</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia</dc:title>\n        <dc:date>2020-12-31</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-020-79480-y</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-020-79480-y</dc:identifier>\n        <bib:pages>22446</bib:pages>\n        <z:citationKey>zandlerReanalysisDatasetsOutperform2020</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:10:issue:1\">\n        <prism:volume>10</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}], "segments": [{"id": "S001", "order": 1, "text": "Climate warming can alter urban fire activity, including building fires, but responses differ among fire categories and climate regimes.", "query": "Climate warming can alter urban fire activity including building fires but responses differ among fire categories and climate regimes", "suggestedInsertText": "(Turco et al., 2018)", "references": [{"title": "Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models", "journal": "Nature Communications", "family": "Nature Portfolio", "year": "2018", "doi": "10.1038/s41467-018-06358-z", "url": "https://doi.org/10.1038/s41467-018-06358-z", "doi_url": "https://doi.org/10.1038/s41467-018-06358-z", "volume": "9", "issue": "1", "start_page": "3821", "end_page": "", "issn": "2041-1723", "authors": ["Turco, Marco", "Rosa-Cánovas, Juan José", "Bedia, Joaquín", "Jerez, Sonia", "Montávez, Juan Pedro", "Llasat, Maria Carmen", "Provenzale, Antonello"], "abstract": "Abstract The observed trend towards warmer and drier conditions in southern Europe is projected to continue in the next decades, possibly leading to increased risk of large fires. However, an assessment of climate change impacts on fires at and above the 1.5 °C Paris target is still missing. Here, we estimate future summer burned area in Mediterranean Europe under 1.5, 2, and 3 °C global warming scenarios, accounting for possible modifications of climate-fire relationships under changed climatic conditions owing to productivity alterations. We found that such modifications could be beneficial, roughly halving the fire-intensifying signals. In any case, the burned area is robustly projected to increase. The higher the warming level is, the larger is the increase of burned area, ranging from ~40% to ~100% across the scenarios. Our results indicate that significant benefits would be obtained if warming were limited to well below 2 °C.", "type": "journal-article", "score": 37.91154, "source_query": "Climate warming can alter urban fire activity including building fires but responses differ among fire categories and climate regimes", "citation_marker": "(Turco et al., 2018)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\n%A Turco, Marco\n%A Rosa-Cánovas, Juan José\n%A Bedia, Joaquín\n%A Jerez, Sonia\n%A Montávez, Juan Pedro\n%A Llasat, Maria Carmen\n%A Provenzale, Antonello\n%J Nature Communications\n%V 9\n%N 1\n%P 3821\n%D 2018\n%@ 2041-1723\n%R 10.1038/s41467-018-06358-z\n%U https://doi.org/10.1038/s41467-018-06358-z", "ris_record": "TY  - JOUR\nTI  - Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models\nAU  - Turco, Marco\nAU  - Rosa-Cánovas, Juan José\nAU  - Bedia, Joaquín\nAU  - Jerez, Sonia\nAU  - Montávez, Juan Pedro\nAU  - Llasat, Maria Carmen\nAU  - Provenzale, Antonello\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2018\nY1  - 2018/10/02\nVL  - 9\nIS  - 1\nSP  - 3821\nDO  - 10.1038/s41467-018-06358-z\nUR  - https://doi.org/10.1038/s41467-018-06358-z\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2041-1723:vol:9:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41467-018-06358-z\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2041-1723:vol:9:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Turco</foaf:surname>\n                        <foaf:givenName>Marco</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Rosa-Cánovas</foaf:surname>\n                        <foaf:givenName>Juan José</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Bedia</foaf:surname>\n                        <foaf:givenName>Joaquín</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Jerez</foaf:surname>\n                        <foaf:givenName>Sonia</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Montávez</foaf:surname>\n                        <foaf:givenName>Juan Pedro</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Llasat</foaf:surname>\n                        <foaf:givenName>Maria Carmen</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Provenzale</foaf:surname>\n                        <foaf:givenName>Antonello</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Exacerbated fires in Mediterranean Europe due to anthropogenic warming projected with non-stationary climate-fire models</dc:title>\n        <dc:date>2018-10-02</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41467-018-06358-z</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41467-018-06358-z</dc:identifier>\n        <bib:pages>3821</bib:pages>\n        <z:citationKey>turcoExacerbatedFiresIn2018</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2041-1723:vol:9:issue:1\">\n        <prism:volume>9</prism:volume>\n        <dc:title>Nature Communications</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2041-1723</dc:identifier>\n    </bib:Journal>"}]}, {"id": "S002", "order": 2, "text": "High-rise buildings concentrate occupants vertically and create distinctive evacuation, smoke-spread, façade-spread and fire-service access challenges.", "query": "High-rise buildings concentrate occupants vertically and create distinctive evacuation smoke-spread fa ade-spread and fire-service access challenges", "suggestedInsertText": "", "references": []}, {"id": "S003", "order": 3, "text": "Heat exposure can influence electricity demand, equipment failure, human behaviour or emergency-response load in cities, providing plausible pathways for an association with building-fire risk.", "query": "Heat exposure can influence electricity demand equipment failure human behaviour or emergency-response load in cities providing plausible pathways for an association with building-fire risk", "suggestedInsertText": "(Chen et al., 2024)", "references": [{"title": "Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2024", "doi": "10.1038/s41598-024-72397-w", "url": "https://doi.org/10.1038/s41598-024-72397-w", "doi_url": "https://doi.org/10.1038/s41598-024-72397-w", "volume": "14", "issue": "1", "start_page": "21368", "end_page": "", "issn": "2045-2322", "authors": ["Chen, Shijia", "Ye, Ze", "Meng, Yichao"], "abstract": "", "type": "journal-article", "score": 24.813557, "source_query": "Heat exposure influence electricity demand equipment failure human behaviour emergency-response load cities", "citation_marker": "(Chen et al., 2024)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response\n%A Chen, Shijia\n%A Ye, Ze\n%A Meng, Yichao\n%J Scientific Reports\n%V 14\n%N 1\n%P 21368\n%D 2024\n%@ 2045-2322\n%R 10.1038/s41598-024-72397-w\n%U https://doi.org/10.1038/s41598-024-72397-w", "ris_record": "TY  - JOUR\nTI  - Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response\nAU  - Chen, Shijia\nAU  - Ye, Ze\nAU  - Meng, Yichao\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2024\nY1  - 2024/09/12\nVL  - 14\nIS  - 1\nSP  - 21368\nDO  - 10.1038/s41598-024-72397-w\nUR  - https://doi.org/10.1038/s41598-024-72397-w\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:14:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-024-72397-w\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:14:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Chen</foaf:surname>\n                        <foaf:givenName>Shijia</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Ye</foaf:surname>\n                        <foaf:givenName>Ze</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Meng</foaf:surname>\n                        <foaf:givenName>Yichao</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Optimization clearing strategy for multi-region electricity-heat market considering shared energy storage and integrated demand response</dc:title>\n        <dc:date>2024-09-12</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-024-72397-w</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-024-72397-w</dc:identifier>\n        <bib:pages>21368</bib:pages>\n        <z:citationKey>chenOptimizationClearingStrategy2024</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:14:issue:1\">\n        <prism:volume>14</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}]}, {"id": "S004", "order": 4, "text": "Urban population density and built form shape the exposure and potential consequences of building fires but should not be treated as short-term ignition mechanisms.", "query": "Urban population density and built form shape the exposure and potential consequences of building fires but should not be treated as short-term ignition mechanisms", "suggestedInsertText": "(Huang et al., 2025)", "references": [{"title": "Declining urban density attenuates rising population exposure to surface heat extremes", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s41598-025-96045-z", "url": "https://doi.org/10.1038/s41598-025-96045-z", "doi_url": "https://doi.org/10.1038/s41598-025-96045-z", "volume": "15", "issue": "1", "start_page": "13860", "end_page": "", "issn": "2045-2322", "authors": ["Huang, Kangning", "Stone, Brian", "Guan, ChengHe", "Liang, Jiayong"], "abstract": "", "type": "journal-article", "score": 24.40488, "source_query": "Urban population density and built form shape the exposure and potential consequences of building fires but should not be treated as short-term ignition mechanisms", "citation_marker": "(Huang et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Declining urban density attenuates rising population exposure to surface heat extremes\n%A Huang, Kangning\n%A Stone, Brian\n%A Guan, ChengHe\n%A Liang, Jiayong\n%J Scientific Reports\n%V 15\n%N 1\n%P 13860\n%D 2025\n%@ 2045-2322\n%R 10.1038/s41598-025-96045-z\n%U https://doi.org/10.1038/s41598-025-96045-z", "ris_record": "TY  - JOUR\nTI  - Declining urban density attenuates rising population exposure to surface heat extremes\nAU  - Huang, Kangning\nAU  - Stone, Brian\nAU  - Guan, ChengHe\nAU  - Liang, Jiayong\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2025\nY1  - 2025/04/22\nVL  - 15\nIS  - 1\nSP  - 13860\nDO  - 10.1038/s41598-025-96045-z\nUR  - https://doi.org/10.1038/s41598-025-96045-z\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:15:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-025-96045-z\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:15:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Huang</foaf:surname>\n                        <foaf:givenName>Kangning</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Stone</foaf:surname>\n                        <foaf:givenName>Brian</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Guan</foaf:surname>\n                        <foaf:givenName>ChengHe</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Liang</foaf:surname>\n                        <foaf:givenName>Jiayong</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Declining urban density attenuates rising population exposure to surface heat extremes</dc:title>\n        <dc:date>2025-04-22</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-025-96045-z</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-025-96045-z</dc:identifier>\n        <bib:pages>13860</bib:pages>\n        <z:citationKey>huangDecliningUrbanDensity2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:15:issue:1\">\n        <prism:volume>15</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}]}, {"id": "S005", "order": 5, "text": "Time-stratified case-crossover designs control location-stable confounding and calendar structure when estimating associations between transient environmental exposures and acute events.", "query": "Time-stratified case-crossover designs control location-stable confounding and calendar structure when estimating associations between transient environmental exposures and acute events", "suggestedInsertText": "", "references": []}, {"id": "S006", "order": 6, "text": "Global gridded population, reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events.", "query": "Global gridded population reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events", "suggestedInsertText": "(Láng-Ritter et al., 2025) (Zandler et al., 2020)", "references": [{"title": "Global gridded population datasets systematically underrepresent rural population", "journal": "Nature Communications", "family": "Nature Portfolio", "year": "2025", "doi": "10.1038/s41467-025-56906-7", "url": "https://doi.org/10.1038/s41467-025-56906-7", "doi_url": "https://doi.org/10.1038/s41467-025-56906-7", "volume": "16", "issue": "1", "start_page": "2170", "end_page": "", "issn": "2041-1723", "authors": ["Láng-Ritter, Josias", "Keskinen, Marko", "Tenkanen, Henrikki"], "abstract": "Abstract Numerous initiatives towards sustainable development rely on global gridded population data. Such data have been calibrated primarily for urban environments, but their accuracy in the rural domain remains largely unexplored. This study systematically validates global gridded population datasets in rural areas, based on reported human resettlement from 307 large dam construction projects in 35 countries. We find large discrepancies between the examined datasets, and, without exception, significant negative biases of −53%, −65%, −67%, −68%, and −84% for WorldPop, GWP, GRUMP, LandScan, and GHS-POP, respectively. This implies that rural population is, even in the most accurate dataset, underestimated by half compared to reported figures. To ensure equitable access to services and resources for rural communities, past and future applications of the datasets must undergo a critical discussion in light of the identified biases. Improvements in the datasets’ accuracies in rural areas can be attained through strengthened population censuses, alternative population counts, and a more balanced calibration of population models.", "type": "journal-article", "score": 31.814636, "source_query": "Global gridded population reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events", "citation_marker": "(Láng-Ritter et al., 2025)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Global gridded population datasets systematically underrepresent rural population\n%A Láng-Ritter, Josias\n%A Keskinen, Marko\n%A Tenkanen, Henrikki\n%J Nature Communications\n%V 16\n%N 1\n%P 2170\n%D 2025\n%@ 2041-1723\n%R 10.1038/s41467-025-56906-7\n%U https://doi.org/10.1038/s41467-025-56906-7", "ris_record": "TY  - JOUR\nTI  - Global gridded population datasets systematically underrepresent rural population\nAU  - Láng-Ritter, Josias\nAU  - Keskinen, Marko\nAU  - Tenkanen, Henrikki\nT2  - Nature Communications\nJO  - Nature Communications\nPY  - 2025\nY1  - 2025/03/18\nVL  - 16\nIS  - 1\nSP  - 2170\nDO  - 10.1038/s41467-025-56906-7\nUR  - https://doi.org/10.1038/s41467-025-56906-7\nSN  - 2041-1723\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2041-1723:vol:16:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41467-025-56906-7\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2041-1723:vol:16:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Láng-Ritter</foaf:surname>\n                        <foaf:givenName>Josias</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Keskinen</foaf:surname>\n                        <foaf:givenName>Marko</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Tenkanen</foaf:surname>\n                        <foaf:givenName>Henrikki</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Global gridded population datasets systematically underrepresent rural population</dc:title>\n        <dc:date>2025-03-18</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41467-025-56906-7</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41467-025-56906-7</dc:identifier>\n        <bib:pages>2170</bib:pages>\n        <z:citationKey>l-ng-ritterGlobalGriddedPopulation2025</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2041-1723:vol:16:issue:1\">\n        <prism:volume>16</prism:volume>\n        <dc:title>Nature Communications</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2041-1723</dc:identifier>\n    </bib:Journal>"}, {"title": "Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia", "journal": "Scientific Reports", "family": "Nature Portfolio", "year": "2020", "doi": "10.1038/s41598-020-79480-y", "url": "https://doi.org/10.1038/s41598-020-79480-y", "doi_url": "https://doi.org/10.1038/s41598-020-79480-y", "volume": "10", "issue": "1", "start_page": "22446", "end_page": "", "issn": "2045-2322", "authors": ["Zandler, Harald", "Senftl, Thomas", "Vanselow, Kim André"], "abstract": "Abstract Global environmental research requires long-term climate data. Yet, meteorological infrastructure is missing in the vast majority of the world’s protected areas. Therefore, gridded products are frequently used as the only available climate data source in peripheral regions. However, associated evaluations are commonly biased towards well observed areas and consequently, station-based datasets. As evaluations on vegetation monitoring abilities are lacking for regions with poor data availability, we analyzed the potential of several state-of-the-art climate datasets (CHIRPS, CRU, ERA5-Land, GPCC-Monitoring-Product, IMERG-GPM, MERRA-2, MODIS-MOD10A1) for assessing NDVI anomalies (MODIS-MOD13Q1) in two particularly suitable remote conservation areas. We calculated anomalies of 156 climate variables and seasonal periods during 2001–2018, correlated these with vegetation anomalies while taking the multiple comparison problem into consideration, and computed their spatial performance to derive suitable parameters. Our results showed that four datasets (MERRA-2, ERA5-Land, MOD10A1, CRU) were suitable for vegetation analysis in both regions, by showing significant correlations controlled at a false discovery rate &lt; 5% and in more than half of the analyzed areas. Cross-validated variable selection and importance assessment based on the Boruta algorithm indicated high importance of the reanalysis datasets ERA5-Land and MERRA-2 in both areas but higher differences and variability between the regions with all other products. CHIRPS, GPCC and the bias-corrected version of MERRA-2 were unsuitable and not important in both regions. We provide evidence that reanalysis datasets are most suitable for spatiotemporally consistent environmental analysis whereas gauge- or satellite-based products and their combinations are highly variable and may not be applicable in peripheral areas.", "type": "journal-article", "score": 25.737984, "source_query": "Global gridded population reanalysis weather and built-environment datasets introduce scale mismatch and measurement error when assigned to point events", "citation_marker": "(Zandler et al., 2020)", "support_grade": "metadata-only candidate", "screening_note": "Inspect abstract/publisher page before citing this paper as support.", "enw_record": "%0 Journal Article\n%T Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia\n%A Zandler, Harald\n%A Senftl, Thomas\n%A Vanselow, Kim André\n%J Scientific Reports\n%V 10\n%N 1\n%P 22446\n%D 2020\n%@ 2045-2322\n%R 10.1038/s41598-020-79480-y\n%U https://doi.org/10.1038/s41598-020-79480-y", "ris_record": "TY  - JOUR\nTI  - Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia\nAU  - Zandler, Harald\nAU  - Senftl, Thomas\nAU  - Vanselow, Kim André\nT2  - Scientific Reports\nJO  - Scientific Reports\nPY  - 2020\nY1  - 2020/12/31\nVL  - 10\nIS  - 1\nSP  - 22446\nDO  - 10.1038/s41598-020-79480-y\nUR  - https://doi.org/10.1038/s41598-020-79480-y\nSN  - 2045-2322\nN1  - Metadata-only candidate. Inspect abstract or publisher page before citing as support.\nER  -", "journal_resource": "urn:issn:2045-2322:vol:10:issue:1", "zotero_rdf_article": "    <bib:Article rdf:about=\"https://doi.org/10.1038/s41598-020-79480-y\">\n        <z:itemType>journalArticle</z:itemType>\n        <dcterms:isPartOf rdf:resource=\"urn:issn:2045-2322:vol:10:issue:1\"/>\n        <bib:authors>\n            <rdf:Seq>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Zandler</foaf:surname>\n                        <foaf:givenName>Harald</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Senftl</foaf:surname>\n                        <foaf:givenName>Thomas</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n                <rdf:li>\n                    <foaf:Person>\n                        <foaf:surname>Vanselow</foaf:surname>\n                        <foaf:givenName>Kim André</foaf:givenName>\n                    </foaf:Person>\n                </rdf:li>\n            </rdf:Seq>\n        </bib:authors>\n        <dc:title>Reanalysis datasets outperform other gridded climate products in vegetation change analysis in peripheral conservation areas of Central Asia</dc:title>\n        <dc:date>2020-12-31</dc:date>\n        <z:libraryCatalog>Crossref</z:libraryCatalog>\n        <dc:identifier>\n            <dcterms:URI>\n                <rdf:value>https://doi.org/10.1038/s41598-020-79480-y</rdf:value>\n            </dcterms:URI>\n        </dc:identifier>\n        <dc:identifier>DOI 10.1038/s41598-020-79480-y</dc:identifier>\n        <bib:pages>22446</bib:pages>\n        <z:citationKey>zandlerReanalysisDatasetsOutperform2020</z:citationKey>\n    </bib:Article>", "zotero_rdf_journal": "    <bib:Journal rdf:about=\"urn:issn:2045-2322:vol:10:issue:1\">\n        <prism:volume>10</prism:volume>\n        <dc:title>Scientific Reports</dc:title>\n        <prism:number>1</prism:number>\n        <dc:identifier>ISSN 2045-2322</dc:identifier>\n    </bib:Journal>"}]}, {"id": "S007", "order": 7, "text": "Risk-informed fire-protection resource allocation can improve the relationship between prevention investment and human or economic losses.", "query": "Risk-informed fire-protection resource allocation can improve the relationship between prevention investment and human or economic losses", "suggestedInsertText": "", "references": []}]}</script>
+  <script>
+    const data = JSON.parse(document.getElementById('citationData').textContent);
+    const modal = document.getElementById('summaryModal');
+    const closeSummary = document.getElementById('closeSummary');
+    const openSummary = document.getElementById('openSummary');
+    const yearFromInput = document.getElementById('yearFrom');
+    const yearToInput = document.getElementById('yearTo');
+    const queryFilterInput = document.getElementById('queryFilter');
+    const selectedOnlyInput = document.getElementById('selectedOnly');
+    const applyFiltersButton = document.getElementById('applyFilters');
+    const clearFiltersButton = document.getElementById('clearFilters');
+    const visibleCount = document.getElementById('visibleCount');
+    const selectedCount = document.getElementById('selectedCount');
+    const selectionList = document.getElementById('selectionList');
+    const selectionEmpty = document.getElementById('selectionEmpty');
+    const downloadSelected = document.getElementById('downloadSelected');
+    const downloadFormat = document.getElementById('downloadFormat');
+    const selectedMap = new Map();
+    let currentDownloadUrl = null;
+
+    downloadFormat.value = data.defaultExportFormat || 'enw';
+
+    function showModal() {
+      if (modal) {
+        modal.classList.remove('is-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+    }
+    function hideModal() {
+      if (modal) {
+        modal.classList.add('is-hidden');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+    window.addEventListener('DOMContentLoaded', showModal);
+    openSummary.addEventListener('click', showModal);
+    closeSummary.addEventListener('click', hideModal);
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        hideModal();
+      }
+    });
+
+    function revokeDownloadUrl() {
+      if (currentDownloadUrl) {
+        URL.revokeObjectURL(currentDownloadUrl);
+        currentDownloadUrl = null;
+      }
+    }
+
+    function selectedItems() {
+      return Array.from(selectedMap.values());
+    }
+
+    function exportItems() {
+      const items = selectedItems();
+      return items.length ? items : (data.references || []);
+    }
+
+    function buildEnw(items) {
+      return items.map((item) => item.enw_record).join('\n\n');
+    }
+
+    function buildRis(items) {
+      return items.map((item) => item.ris_record).join('\n\n');
+    }
+
+    function buildZoteroRdf(items) {
+      const journals = new Map();
+      const articles = [];
+      for (const item of items) {
+        if (item.zotero_rdf_article) {
+          articles.push(item.zotero_rdf_article);
+        }
+        if (item.journal_resource && item.zotero_rdf_journal && !journals.has(item.journal_resource)) {
+          journals.set(item.journal_resource, item.zotero_rdf_journal);
+        }
+      }
+      const header = [
+        '<rdf:RDF',
+        ' xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"',
+        ' xmlns:z="http://www.zotero.org/namespaces/export#"',
+        ' xmlns:dcterms="http://purl.org/dc/terms/"',
+        ' xmlns:bib="http://purl.org/net/biblio#"',
+        ' xmlns:foaf="http://xmlns.com/foaf/0.1/"',
+        ' xmlns:dc="http://purl.org/dc/elements/1.1/"',
+        ' xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/"',
+        '>',
+      ].join('');
+      return [header, ...articles, ...journals.values(), '</rdf:RDF>'].join('\n');
+    }
+
+    function exportFileName(format, hasSelection) {
+      const base = hasSelection ? 'selected-references' : 'all-references';
+      if (format === 'ris') return `${base}.ris`;
+      if (format === 'zotero-rdf') return `${base}.rdf`;
+      return `${base}.enw`;
+    }
+
+    function updateDownloadLink() {
+      const items = exportItems();
+      const format = downloadFormat.value || 'enw';
+      const hasSelection = selectedItems().length > 0;
+      let content = '';
+      if (format === 'ris') {
+        content = buildRis(items);
+      } else if (format === 'zotero-rdf') {
+        content = buildZoteroRdf(items);
+      } else {
+        content = buildEnw(items);
+      }
+      revokeDownloadUrl();
+      currentDownloadUrl = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }));
+      downloadSelected.href = currentDownloadUrl;
+      downloadSelected.download = exportFileName(format, hasSelection);
+    }
+
+    function updateSelectedPanel() {
+      selectionList.innerHTML = '';
+      const items = selectedItems();
+      selectedCount.textContent = String(items.length);
+      if (!items.length) {
+        selectionEmpty.classList.remove('hidden');
+      } else {
+        selectionEmpty.classList.add('hidden');
+      }
+      for (const item of items) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'selection-item';
+        wrapper.innerHTML = `<h4>${item.title}</h4><p>${item.journal} · ${item.year || 'n.d.'}</p>`;
+        selectionList.appendChild(wrapper);
+      }
+      updateDownloadLink();
+    }
+
+    function yearPass(year) {
+      const fromYear = Number(yearFromInput.value || 0);
+      const toYear = Number(yearToInput.value || 0);
+      const y = Number(year || 0);
+      if (fromYear && (!y || y < fromYear)) return false;
+      if (toYear && (!y || y > toYear)) return false;
+      return true;
+    }
+
+    function queryPass(text) {
+      const needle = queryFilterInput.value.trim().toLowerCase();
+      if (!needle) return true;
+      return text.toLowerCase().includes(needle);
+    }
+
+    function applyFilters() {
+      let totalVisible = 0;
+      document.querySelectorAll('.segment-card').forEach((card) => {
+        let visibleRefs = 0;
+        card.querySelectorAll('.reference').forEach((ref) => {
+          const title = ref.dataset.title || '';
+          const journal = ref.dataset.journal || '';
+          const doi = ref.dataset.doi || '';
+          const authors = ref.dataset.authors || '';
+          const segmentText = ref.dataset.segment || '';
+          const year = ref.dataset.year || '';
+          const key = ref.dataset.key || '';
+          const searchText = `${title} ${journal} ${doi} ${authors} ${segmentText}`;
+          const matches = yearPass(year) && queryPass(searchText) && (!selectedOnlyInput.checked || selectedMap.has(key));
+          ref.classList.toggle('hidden', !matches);
+          if (matches) visibleRefs += 1;
+        });
+        const noRefsMessage = card.querySelector('.empty');
+        if (noRefsMessage) {
+          const matches = !selectedOnlyInput.checked && queryPass(card.dataset.segment || '');
+          noRefsMessage.classList.toggle('hidden', !matches);
+          card.classList.toggle('hidden', !matches);
+          if (matches) totalVisible += 1;
+          return;
+        }
+        card.classList.toggle('hidden', visibleRefs === 0);
+        totalVisible += visibleRefs;
+      });
+      visibleCount.textContent = String(totalVisible);
+    }
+
+    document.querySelectorAll('.reference').forEach((ref) => {
+      const checkbox = ref.querySelector('input[type="checkbox"]');
+      checkbox.addEventListener('change', () => {
+        const key = ref.dataset.key;
+        const record = JSON.parse(ref.dataset.record);
+        if (checkbox.checked) {
+          selectedMap.set(key, record);
+        } else {
+          selectedMap.delete(key);
+        }
+        updateSelectedPanel();
+        applyFilters();
+      });
+    });
+
+    applyFiltersButton.addEventListener('click', applyFilters);
+    downloadFormat.addEventListener('change', updateDownloadLink);
+    clearFiltersButton.addEventListener('click', () => {
+      yearFromInput.value = '';
+      yearToInput.value = '';
+      queryFilterInput.value = '';
+      selectedOnlyInput.checked = false;
+      applyFilters();
+    });
+    queryFilterInput.addEventListener('input', applyFilters);
+    selectedOnlyInput.addEventListener('change', applyFilters);
+    yearFromInput.addEventListener('change', applyFilters);
+    yearToInput.addEventListener('change', applyFilters);
+    updateSelectedPanel();
+    applyFilters();
+  </script>
+</body>
+</html>

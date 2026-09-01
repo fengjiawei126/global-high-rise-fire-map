@@ -1,0 +1,34 @@
+project:
+  name: Global_HighRise_Fire_Heatwave
+  analysis_version: 0.1.0
+  access_date: 2026-08-31
+earth_engine:
+  project_id: graceful-fold-465505-i5
+  service_account: 388055120512-compute@developer.gserviceaccount.com
+  key_environment_variable: GOOGLE_APPLICATION_CREDENTIALS
+heatwave:
+  climate_baseline_start: 1991-01-01
+  climate_baseline_end: 2020-12-31
+  local_percentile: 90
+  absolute_floor_c: 30
+  event_window_days: 7
+  minimum_exceedance_days: 3
+  control_strategy: same weekday within event month and year
+spatial:
+  population_product: CIESIN/GPWv411/GPW_Population_Count
+  population_epoch: 2020
+  population_native_resolution_m: 927.67
+  climate_product: ECMWF/ERA5_LAND/DAILY_AGGR
+  climate_resolution_m: 11132
+  built_surface_product: JRC/GHSL/P2023A/GHS_BUILT_S/2020
+  built_height_product: JRC/GHSL/P2023A/GHS_BUILT_H/2018
+  built_volume_product: JRC/GHSL/P2023A/GHS_BUILT_V/2020
+  urbanisation_product: JRC/GHSL/P2023A/GHS_SMOD_V2-0/2020
+country_context:
+  provider: World Bank World Development Indicators API v2
+  indicators:
+    gdp_per_capita_ppp_constant_2021: NY.GDP.PCAP.PP.KD
+    urban_population_percent: SP.URB.TOTL.IN.ZS
+    electricity_access_percent: EG.ELC.ACCS.ZS
+    national_population: SP.POP.TOTL
+  maximum_backward_match_years: 3

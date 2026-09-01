@@ -1,0 +1,16 @@
+pandas>=2.2,<3
+numpy>=2.0,<3
+openpyxl>=3.1,<4
+pyarrow>=17,<24
+scipy>=1.13,<2
+statsmodels>=0.14,<1
+scikit-learn>=1.5,<2
+matplotlib>=3.9,<4
+seaborn>=0.13,<1
+cartopy>=0.23,<1
+earthengine-api>=1.5,<2
+google-auth>=2.30,<3
+requests>=2.32,<3
+country-converter>=1.2,<2
+nbformat>=5.10,<6
+jupyterlab>=4.2,<5

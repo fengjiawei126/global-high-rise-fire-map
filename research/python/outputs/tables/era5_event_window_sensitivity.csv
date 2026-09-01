@@ -1,0 +1,13 @@
+﻿display_order,analysis_family,restriction,exposure,odds_ratio,ci_low,ci_high,p_value,n_observations,n_strata,n_informative_strata,converged,status,weather_product
+1,Cohort and event exclusions,Extended cohort,heatwave_indicator,0.7214708890560738,0.23867356313464283,2.1808877234623623,0.5629668599581191,995,228,21,True,completed,ERA5-Land
+2,Cohort and event exclusions,Core cohort,heatwave_indicator,0.9232250961607638,0.29495834799703496,2.8897116625755563,0.8908598467448198,832,191,17,True,completed,ERA5-Land
+3,Cohort and event exclusions,Exclude 2025–2026,heatwave_indicator,0.22652617031034727,0.02884728099521483,1.7788194958126007,0.15788124426596362,622,142,13,True,completed,ERA5-Land
+4,Cohort and event exclusions,Exclude construction,heatwave_indicator,0.8580620161456846,0.2772006380044223,2.656092095791825,0.7905991172505372,893,205,18,True,completed,ERA5-Land
+5,Cohort and event exclusions,Exclude façade,heatwave_indicator,0.88228154839501,0.24754695785696074,3.144537656116497,0.8468403197991028,749,172,15,True,completed,ERA5-Land
+6,Cohort and event exclusions,Exclude arson,heatwave_indicator,0.7627961517259918,0.25058792801861823,2.3219712684832583,0.6335469994769342,964,221,20,True,completed,ERA5-Land
+7,Leave-one-continent-out,Leave out Asia,heatwave_indicator,0.4076287114741692,0.05019286073013218,3.310454196095268,0.40103297665644344,589,137,9,True,completed,ERA5-Land
+8,Leave-one-continent-out,Leave out Europe,heatwave_indicator,0.7981279873354162,0.2628453078043428,2.4235101987906122,0.6907010292525877,749,170,20,True,completed,ERA5-Land
+9,Leave-one-continent-out,Leave out Oceania,heatwave_indicator,0.7196304476210307,0.23812148132836541,2.174805810270909,0.559831584844315,932,214,21,True,completed,ERA5-Land
+10,Leave-one-continent-out,Leave out North America,heatwave_indicator,0.6281230442567519,0.17677963236000363,2.231810042024014,0.472205883994838,813,185,17,True,completed,ERA5-Land
+11,Leave-one-continent-out,Leave out Africa,heatwave_indicator,0.8644030123220924,0.2787995548545354,2.6800350097451107,0.8007308927502655,937,215,18,True,completed,ERA5-Land
+12,Leave-one-continent-out,Leave out South America,heatwave_indicator,0.7660609381576715,0.2515284688780855,2.3331329594164334,0.6390699721021148,955,219,20,True,completed,ERA5-Land
