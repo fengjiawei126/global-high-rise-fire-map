@@ -48,7 +48,7 @@ Heat threshold & P85, P90 and P95 with the 30\,$^\circ$C floor & Test dependence
 Duration & 2, 3 and 4 consecutive days at P90 & Test temporal persistence assumption.\\
 Absolute floor & 30\,$^\circ$C versus no floor & Separate absolute thermal load from local anomaly.\\
 Climatology & Calendar month; a 15-day calendar window is future sensitivity work & Prevent an unimplemented alternative from being presented as completed.\\
-Lag & Current day plus three ordered lags retained in the extraction table & Test acute timing without selecting a post-hoc best curve.\\
+Lag & Current day, three ordered lags and their four-day mean fitted as continuous anomalies & Test acute timing without selecting a post-hoc best curve; report Holm-adjusted values.\\
 Sources & Core versus extended versus all geocoded & Assess dependence on provenance criteria.\\
 Period & Exclude 2025--2026 & Assess active database-expansion period.\\
 Event type & Exclude construction, façade or arson events in turn & Assess heterogeneous ignition pathways.\\
@@ -275,6 +275,51 @@ Leave out South America & 1.37 & 0.45--4.17 & 15\\
 \end{longtable}
 All models use the P90, three-day definition with a 30\,$^\circ$C floor and adjust for dewpoint, precipitation and wind. Odds ratios compare a heatwave-exposed with an unexposed matched day. Confidence intervals are Wald intervals; no multiplicity-adjusted inference is made.
 
+\section*{Supplementary Note 11: Continuous-temperature sensitivity}
+The binary heatwave contrast is sparse because only a small subset of strata change threshold status within a matched month. We therefore fitted a fixed secondary family using continuous maximum-temperature anomaly on the current day, at lags one to three days and averaged across lag zero to three. All 228 event strata were informative. Using an interquartile range calculated separately for each product and timing specification, weather-adjusted current-day odds ratios were 1.34 (95\% confidence interval 1.03--1.74) for ERA5-Land and 1.35 (1.04--1.74) for NASA POWER; four-day mean estimates were 1.55 (1.18--2.03) and 1.50 (1.15--1.96), respectively. The four-day mean survived Holm correction in both products. Current-day estimates attenuated to 1.10 (0.89--1.36) and 1.11 (0.91--1.37) in temperature-only models (Supplementary Table~\ref{tab:s9}; Supplementary Fig.~\ref{fig:s6}).
+
+This adjustment dependence is not explained by severe linear collinearity: after within-stratum centring, the current-day anomaly--dewpoint correlation was 0.576 in ERA5-Land and 0.580 in NASA POWER, while variance-inflation factors for temperature, dewpoint, precipitation and wind ranged from 1.03 to 1.64. It nevertheless changes the estimand. Simultaneous adjustment estimates the dry-bulb contrast conditional on other weather dimensions; temperature-only models estimate a different composite contrast. The analysis therefore does not select the larger coefficient, establish mediation or show that heatwaves cause fires.
+
+\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.08\textwidth}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.08\textwidth}}
+\caption{\textbf{Continuous temperature models.}}\label{tab:s9}\\
+\toprule
+Product & Adjustment & Exposure window & Odds ratio & 95\% confidence interval & Holm $P$\\
+\midrule
+\endfirsthead
+\toprule
+Product & Adjustment & Exposure window & Odds ratio & 95\% confidence interval & Holm $P$\\
+\midrule
+\endhead
+\midrule
+\multicolumn{6}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+ERA5-Land & Weather adjusted & Current day & 1.34 & 1.03--1.74 & 0.047\\
+ERA5-Land & Weather adjusted & Lag 1 day & 1.37 & 1.07--1.75 & 0.040\\
+ERA5-Land & Weather adjusted & Lag 2 days & 1.28 & 1.03--1.59 & 0.047\\
+ERA5-Land & Weather adjusted & Lag 3 days & 1.39 & 1.12--1.73 & 0.012\\
+ERA5-Land & Weather adjusted & Mean lag 0--3 & 1.55 & 1.18--2.03 & 0.0089\\
+ERA5-Land & Temperature only & Current day & 1.10 & 0.89--1.36 & 0.368\\
+ERA5-Land & Temperature only & Lag 1 day & 1.18 & 0.95--1.46 & 0.278\\
+ERA5-Land & Temperature only & Lag 2 days & 1.19 & 0.97--1.47 & 0.266\\
+ERA5-Land & Temperature only & Lag 3 days & 1.32 & 1.07--1.63 & 0.049\\
+ERA5-Land & Temperature only & Mean lag 0--3 & 1.28 & 1.01--1.62 & 0.166\\
+NASA POWER & Weather adjusted & Current day & 1.35 & 1.04--1.74 & 0.070\\
+NASA POWER & Weather adjusted & Lag 1 day & 1.24 & 0.97--1.58 & 0.083\\
+NASA POWER & Weather adjusted & Lag 2 days & 1.27 & 1.03--1.58 & 0.070\\
+NASA POWER & Weather adjusted & Lag 3 days & 1.42 & 1.13--1.78 & 0.013\\
+NASA POWER & Weather adjusted & Mean lag 0--3 & 1.50 & 1.15--1.96 & 0.013\\
+NASA POWER & Temperature only & Current day & 1.11 & 0.91--1.37 & 0.624\\
+NASA POWER & Temperature only & Lag 1 day & 1.10 & 0.90--1.36 & 0.624\\
+NASA POWER & Temperature only & Lag 2 days & 1.18 & 0.97--1.44 & 0.309\\
+NASA POWER & Temperature only & Lag 3 days & 1.34 & 1.08--1.67 & 0.038\\
+NASA POWER & Temperature only & Mean lag 0--3 & 1.25 & 1.00--1.56 & 0.213\\
+\end{longtable}
+\normalsize
+Odds ratios are scaled per product- and specification-specific interquartile range of continuous anomaly (4.26--5.22\,$^\circ$C). Weather-adjusted models use 995 ERA5-Land or 1,001 NASA POWER matched days; temperature-only models use 995 and 1,001--1,004 days, respectively. Every model contains 228 strata. Holm $P$ values control family-wise error across the five timing specifications separately within each product and adjustment set.
+
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/Figure_S1.pdf}
@@ -311,6 +356,14 @@ All models use the P90, three-day definition with a 30\,$^\circ$C floor and adju
 \includegraphics[width=\textwidth]{figures/Figure_S5.pdf}
 \caption{\textbf{Evidence-window and geographic sensitivity of the independent weather product.} \textbf{a}, The NASA POWER primary heatwave definition in the extended and core cohorts and after prespecified period or event-type exclusions. \textbf{b}, The same model after leaving out each continent in turn. Points show adjusted odds ratios, horizontal bars show 95\% Wald confidence intervals, and colour and area encode the number of informative strata. The diamond marks the extended-cohort estimate. Every model adjusts for dewpoint, precipitation and wind; all intervals include one.}
 \label{fig:s5}
+\end{figure}
+
+\clearpage
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/Figure_S6.pdf}
+\caption{\textbf{Continuous temperature associations depend on weather adjustment.} \textbf{a}, Conditional odds ratios per product- and specification-specific interquartile-range increase in maximum-temperature anomaly after simultaneous adjustment for dewpoint, precipitation and wind. \textbf{b}, Corresponding temperature-only estimates. Rows show the current day, lags one to three days and their four-day mean. Points distinguish ERA5-Land and NASA POWER; horizontal bars show 95\% Wald confidence intervals. All 228 strata are informative. Holm-adjusted $P$ values for each five-model product and adjustment family are reported in Supplementary Table~\ref{tab:s9} and the source data. These conditional associations are secondary and do not establish a heatwave or total-temperature effect.}
+\label{fig:s6}
 \end{figure}
 
 \end{document}

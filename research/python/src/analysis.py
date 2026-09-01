@@ -4,6 +4,7 @@ import statsmodels.api as sm # 导入统计模型基础接口
 import statsmodels.formula.api as smf # 导入公式模型接口
 from scipy.stats import chi2 # 导入卡方分布用于置信区间
 from statsmodels.discrete.conditional_models import ConditionalLogit # 导入条件Logit病例交叉模型
+from statsmodels.stats.multitest import multipletests # 导入多重检验校正函数
 def robust_scale(series): # 定义稳健标准化函数
     values=pd.to_numeric(series,errors="coerce") # 将输入转换为数值
     median=values.median() # 计算样本中位数
@@ -57,6 +58,22 @@ def heat_definition_sensitivity(case_control,definitions=("heatwave_indicator","
         result.update({"definition":exposure,"n_observations":int(len(sample)),"n_strata":int(sample["stratum_id"].nunique()),"n_informative_strata":int(sample.groupby("stratum_id")[exposure].nunique().gt(1).sum()),"converged":bool(getattr(fit,"mle_retvals",{}).get("converged",True))}) # 补充样本量、有效分层数与收敛状态
         rows.append(result) # 保存当前定义结果
     return pd.DataFrame(rows) # 返回多定义稳健性效应量表
+def continuous_temperature_sensitivity(case_control,covariates=("dewpoint_c","precipitation_mm","wind_speed_ms")): # 定义连续温度异常与有序滞后敏感性分析
+    data=case_control.copy() # 复制病例交叉表避免修改原始输入
+    data["tmax_lag0_anomaly_c"]=pd.to_numeric(data["tmax_c"],errors="coerce")-pd.to_numeric(data["tmax_p90_c"],errors="coerce") # 计算事件或对照当日相对局地月度P90的温度异常
+    for lag in [1,2,3]: data[f"tmax_lag{lag}_anomaly_c"]=pd.to_numeric(data[f"tmax_lag{lag}_c"],errors="coerce")-pd.to_numeric(data["tmax_p90_c"],errors="coerce") # 计算前三日相对同一局地月度P90的有序温度异常
+    data["tmax_mean_lag0_3_anomaly_c"]=data[[f"tmax_lag{lag}_anomaly_c" for lag in [0,1,2,3]]].mean(axis=1) # 计算当日及前三日平均温度异常以表示连续累积热暴露
+    specifications=[("Current day",0,"tmax_lag0_anomaly_c"),("Lag 1 day",1,"tmax_lag1_anomaly_c"),("Lag 2 days",2,"tmax_lag2_anomaly_c"),("Lag 3 days",3,"tmax_lag3_anomaly_c"),("Mean lag 0–3 days",-1,"tmax_mean_lag0_3_anomaly_c")] # 固定连续暴露与滞后分析顺序
+    rows=[] # 初始化连续温度敏感性结果容器
+    for order,(label,lag_days,exposure) in enumerate(specifications,1): # 遍历当日三个单日滞后与四日平均暴露
+        fit,table,sample=conditional_heat_model(data,exposure=exposure,covariates=covariates,binary_exposures=()) # 按连续变量每四分位距尺度拟合相同条件Logit模型
+        estimate=table.loc[table["variable"].eq(exposure)].iloc[0].to_dict() # 提取当前连续温度暴露效应量
+        exposure_values=pd.to_numeric(sample[exposure],errors="coerce") # 读取实际模型样本中的连续温度异常
+        estimate.update({"display_order":order,"specification":label,"lag_days":lag_days,"temperature_column":exposure,"temperature_iqr_c":exposure_values.quantile(0.75)-exposure_values.quantile(0.25),"n_observations":len(sample),"n_strata":sample["stratum_id"].nunique(),"n_informative_strata":sample.groupby("stratum_id")[exposure].nunique().gt(1).sum(),"converged":bool(getattr(fit,"mle_retvals",{}).get("converged",True))}) # 保存可解释温度尺度样本量有效分层与收敛状态
+        rows.append(estimate) # 追加当前连续温度结果
+    results=pd.DataFrame(rows) # 汇总全部连续温度与滞后敏感性结果
+    results["p_value_holm"]=multipletests(results["p_value"],method="holm")[1] # 在五个预设相关温度规格内计算Holm校正P值
+    return results # 返回包含原始与校正P值的连续温度敏感性结果
 def event_window_sensitivity(case_control,events,exposure="heatwave_indicator",covariates=("dewpoint_c","precipitation_mm","wind_speed_ms")): # 定义来源时期事件类型与逐洲留一病例交叉敏感性分析
     event_data=events.drop_duplicates("event_id").set_index("event_id") # 将事件属性整理为按稳定事件编号索引的事实表
     extended=event_data["analysis_extended"].astype(bool) # 定义主分析扩展队列掩码

@@ -19,12 +19,12 @@ This project provides a reproducible global analysis of documented high-rise bui
 ## Research analysis and paper
 
 - `research/python/`: the four modular Jupyter notebooks, Python source modules, QA tests, processed event and case-control tables, model outputs and all panel-level source data.
-- `research/python/outputs/figures/`: Figures 1--4 and Supplementary Figures S1--S5 in PDF, PNG and SVG.
-- `research/paper/manuscript.tex` and `research/paper/manuscript.pdf`: compiled 14-page main manuscript with four main figures.
-- `research/paper/SI.tex` and `research/paper/SI.pdf`: compiled 13-page Supplementary Information with 11 tables and five figures.
+- `research/python/outputs/figures/`: Figures 1--4 and Supplementary Figures S1--S6 in PDF, PNG and SVG.
+- `research/paper/manuscript.tex` and `research/paper/manuscript.pdf`: compiled 15-page main manuscript with four main figures.
+- `research/paper/SI.tex` and `research/paper/SI.pdf`: compiled 15-page Supplementary Information with 12 tables and six figures.
 - `research/paper/claim_evidence_ledger.csv`: claim-to-evidence audit with explicit interpretation boundaries.
 
-The prespecified ERA5-Land case-crossover estimate is OR 0.72 (95% CI 0.24--2.18; P=0.563; 21 informative strata). Six ERA5-Land definitions, evidence-window exclusions, coastal-fallback exclusion and the independent NASA POWER product are all statistically imprecise. The current data therefore do not support a positive acute heat association, but also do not identify a precise null effect.
+The prespecified ERA5-Land case-crossover estimate is OR 0.72 (95% CI 0.24--2.18; P=0.563; 21 informative strata). Six ERA5-Land definitions, evidence-window exclusions, coastal-fallback exclusion and the independent NASA POWER threshold analysis are all statistically imprecise. A secondary continuous-temperature family is positive after adjustment for dewpoint, precipitation and wind in both products but attenuates in temperature-only models. The current data therefore do not support a positive threshold-defined heatwave association or identify a causal total-temperature effect.
 
 ## Reproduce the existing map
 

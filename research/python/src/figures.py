@@ -465,9 +465,9 @@ def make_figure_4(events,death_model,injury_model,output_stem): # 定义报告�
     models=models.loc[models["term"].isin(selected_terms)].copy() # 保留预设建筑、时间、经济与事件类型协变量
     models["predictor"]=models["term"].map(selected_terms) # 生成人类可读协变量标签
     models.to_csv(source_dir/"Figure_4c_consequence_associations.csv",index=False,encoding="utf-8-sig") # 输出后果探索关联森林图源数据
-    fig=plt.figure(figsize=(7.2,3.6),constrained_layout=False) # 创建Nature双栏宽度三分面主图
-    grid=fig.add_gridspec(1,3,width_ratios=[0.95,1.10,1.55],left=0.075,right=0.985,bottom=0.24,top=0.80,wspace=0.58) # 定义集中度、规模梯度与探索模型布局
-    axis_concentration=fig.add_subplot(grid[0,0]) # 创建后果集中曲线分面
+    fig=plt.figure(figsize=(7.2,5.15),constrained_layout=False) # 创建适合论文整页展示的Nature双栏宽度主图
+    grid=fig.add_gridspec(2,2,height_ratios=[1.05,1.0],left=0.10,right=0.98,bottom=0.18,top=0.86,wspace=0.42,hspace=0.64) # 采用上排双图与下排通栏森林图布局提升可读性
+    axis_concentration=fig.add_subplot(grid[0,0]) # 创建左上后果集中曲线分面
     axis_concentration.plot([0,1],[0,1],color="#B8B5B0",linewidth=0.8,linestyle="--",zorder=0) # 绘制完全均等参考线
     for outcome,color in outcome_colors.items(): # 遍历死亡与受伤集中曲线
         current=concentration.loc[concentration["outcome"].eq(outcome)] # 提取当前后果集中曲线
@@ -482,7 +482,7 @@ def make_figure_4(events,death_model,injury_model,output_stem): # 定义报告�
     axis_concentration.set_title("Burden concentration") # 使用紧凑标题避免与分面标签相碰
     axis_concentration.legend(fontsize=4.9,loc="upper left") # 添加后果类型与基尼系数图例
     _panel_label(axis_concentration,"a") # 添加后果集中度分面标签
-    axis_quartile=fig.add_subplot(grid[0,1]) # 创建建筑规模四分位后果分面
+    axis_quartile=fig.add_subplot(grid[0,1]) # 创建右上建筑规模四分位后果分面
     quartile_order=["Q1, smaller","Q2","Q3","Q4, larger"] # 固定报告建筑规模四分位顺序
     x=np.arange(len(quartile_order)) # 定义建筑规模四分位横轴位置
     offsets={"Deaths":-0.09,"Injuries":0.09} # 定义死亡与受伤点位错开距离
@@ -499,7 +499,7 @@ def make_figure_4(events,death_model,injury_model,output_stem): # 定义报告�
     axis_quartile.set_title("Building-size profile") # 设置建筑规模后果标题
     axis_quartile.legend(fontsize=5.0,loc="lower left") # 添加死亡与受伤图例
     _panel_label(axis_quartile,"b") # 添加建筑规模后果分面标签
-    axis_model=fig.add_subplot(grid[0,2]) # 创建报告后果探索关联森林图分面
+    axis_model=fig.add_subplot(grid[1,:]) # 创建横跨下排的报告后果探索关联森林图分面
     predictors=list(selected_terms.values()) # 固定探索模型协变量显示顺序
     base=np.arange(len(predictors))[::-1] # 定义自上而下的协变量位置
     for outcome in ["Deaths","Injuries"]: # 遍历死亡与受伤探索模型
@@ -518,8 +518,8 @@ def make_figure_4(events,death_model,injury_model,output_stem): # 定义报告�
     _panel_label(axis_model,"c") # 添加探索关联森林图分面标签
     death_n=int(death_model["n_observations"].iloc[0]) # 读取死亡探索模型样本量
     injury_n=int(injury_model["n_observations"].iloc[0]) # 读取受伤探索模型样本量
-    fig.suptitle("Recorded human consequences are concentrated and structurally heterogeneous",x=0.52,y=0.96,ha="center",fontsize=10,fontweight="bold",color="#202020") # 居中设置结果导向主图标题
-    fig.text(0.075,0.045,f"Panels a and b use available numeric outcomes. Panel c models log(count + 1) among records with reported building size and GDP (deaths n={death_n}; injuries n={injury_n}); injury estimates use stabilized reporting weights, while death reporting exceeds 95%. Associations are exploratory, conditional on documentation and not incidence effects.",ha="left",va="bottom",fontsize=5.0,color=NEUTRAL) # 说明样本、变换、权重与推断边界
+    fig.suptitle("Recorded human consequences are concentrated and structurally heterogeneous",x=0.54,y=0.965,ha="center",fontsize=10,fontweight="bold",color="#202020") # 居中设置结果导向主图标题
+    fig.text(0.10,0.025,f"Panels a and b use available numeric outcomes. Panel c models log(count + 1) among records with reported building size and GDP (deaths n={death_n}; injuries n={injury_n}).\nInjury estimates use stabilized reporting weights, while death reporting exceeds 95%; associations are exploratory, conditional on documentation and not incidence effects.",ha="left",va="bottom",fontsize=5.2,color=NEUTRAL,linespacing=1.25) # 以两行说明样本变换权重与推断边界
     paths=_save_formats(fig,output_stem) # 保存全部出版格式
     plt.close(fig) # 关闭图对象释放内存
     return paths # 返回报告后果集中度与探索关联主图路径
@@ -619,3 +619,39 @@ def make_supplementary_figure_5(sensitivity_results,output_stem): # 定义独立
     paths=_save_formats(fig,output_stem) # 保存全部出版格式
     plt.close(fig) # 关闭图对象释放内存
     return paths # 返回队列排除与逐洲留一补充图路径
+def make_supplementary_figure_6(era5_results,power_results,output_stem): # 定义双气象产品连续温度与滞后敏感性补充图
+    set_nature_style() # 应用统一出版风格
+    output_stem=Path(output_stem) # 标准化输出文件前缀
+    source_dir=output_stem.parents[2]/"outputs/tables" # 定位逐图源数据目录
+    source_dir.mkdir(parents=True,exist_ok=True) # 确保逐图源数据目录存在
+    data=pd.concat([era5_results.copy(),power_results.copy()],ignore_index=True) # 合并两个独立气象产品结果
+    data["product_label"]=data["weather_product"].map(lambda value:"ERA5-Land" if str(value).startswith("ERA5") else "NASA POWER") # 生成紧凑气象产品标签
+    data.to_csv(source_dir/"Figure_S6_continuous_temperature_sensitivity.csv",index=False,encoding="utf-8-sig") # 输出连续温度森林图完整源数据
+    labels=["Current day","Lag 1 day","Lag 2 days","Lag 3 days","Mean lag 0–3 days"] # 固定连续温度暴露规格显示顺序
+    adjustments=[("Dewpoint + precipitation + wind","Weather-adjusted"),("Temperature only","Temperature only")] # 定义两个协变量规格分面
+    products=[("ERA5-Land","o","#315F73",0.11),("NASA POWER","s","#C85B4B",-0.11)] # 定义产品形状颜色与纵向错位
+    fig=plt.figure(figsize=(7.2,3.45),constrained_layout=False) # 创建Nature双栏宽度连续温度补充图
+    grid=fig.add_gridspec(1,2,left=0.14,right=0.985,bottom=0.27,top=0.80,wspace=0.40) # 为标签图例与脚注预留独立空间
+    for index,(adjustment,title) in enumerate(adjustments): # 遍历天气调整与仅温度规格
+        axis=fig.add_subplot(grid[0,index]) # 创建当前模型规格分面
+        base=np.arange(len(labels))[::-1] # 定义从当前日到四日均值的纵向位置
+        for product,marker,color,offset in products: # 遍历两个独立气象产品
+            current=data.loc[data["adjustment"].eq(adjustment)&data["product_label"].eq(product)].sort_values("display_order") # 筛选并排序当前产品模型
+            y=base+offset # 计算产品错位后的纵向位置
+            axis.errorbar(current["odds_ratio"],y,xerr=[current["odds_ratio"]-current["ci_low"],current["ci_high"]-current["odds_ratio"]],fmt=marker,markersize=4.3,color=color,ecolor=color,elinewidth=1.05,capsize=0,label=product,zorder=3) # 绘制每产品每四分位距优势比与95%区间
+        axis.axvline(1,color="#8A8A8A",linewidth=0.8,linestyle="--",zorder=0) # 绘制无关联优势比参考线
+        axis.set_xscale("log") # 使用对数尺度展示优势比
+        axis.set_xlim(0.8,2.2) # 固定跨分面效应量横轴范围
+        axis.set_xticks([0.8,1,1.25,1.5,2],labels=["0.8","1","1.25","1.5","2"]) # 设置共享可解释对数刻度
+        axis.minorticks_off() # 关闭对数次刻度减少视觉干扰
+        axis.set_yticks(base,labels if index==0 else []) # 仅左侧分面显示滞后规格标签
+        axis.set_xlabel("Odds ratio per specification-specific IQR (95% CI)") # 标注连续温度条件优势比横轴
+        axis.set_title(title) # 设置协变量规格分面标题
+        axis.grid(axis="x",which="major",color="#ECE9E4",linewidth=0.6,zorder=0) # 添加克制的纵向参考网格
+        _panel_label(axis,chr(ord("a")+index)) # 添加补充分面标签
+    fig.axes[1].legend(fontsize=5.4,loc="upper center",bbox_to_anchor=(0.5,-0.25),ncol=2) # 将共享产品图例置于右分面横轴下方
+    fig.suptitle("Continuous temperature associations depend on weather adjustment",x=0.53,y=0.96,ha="center",fontsize=10,fontweight="bold",color="#202020") # 以结论导向标题概括调整依赖性
+    fig.text(0.14,0.02,"Conditional logistic models use 228 event strata. Product- and specification-specific IQRs span 4.3–5.2 °C. Holm-adjusted P values for each five-model family are provided in the source data; no estimate is interpreted as a causal heat effect.",ha="left",va="bottom",fontsize=5.2,color=NEUTRAL) # 说明尺度多重比较与因果边界
+    paths=_save_formats(fig,output_stem) # 保存全部出版格式
+    plt.close(fig) # 关闭图对象释放内存
+    return paths # 返回连续温度敏感性补充图路径
